@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/*
+ * MechLens design tokens.
+ *
+ * A light studio palette for the product, graphite for the trust section, and one accent:
+ * workshop yellow, kept for the things you act on (buttons, the push-to-talk ring, the status
+ * light). Yellow is never used for text on a light surface.
+ */
+@theme {
+  --color-studio: #eef0f2;
+  --color-surface: #ffffff;
+  --color-ink: #121519;
+  --color-ink-muted: #4b5560;
+  --color-line: #d9dee3;
+  --color-graphite: #16191d;
+  --color-graphite-raised: #1f2329;
+  --color-on-graphite: #eceff2;
+  --color-on-graphite-muted: #a1abb5;
+  --color-graphite-line: rgb(255 255 255 / 0.12);
+  --color-signal: #f2b705;
+  --color-signal-hover: #ffc929;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-rise: rise 0.8s var(--ease-out-soft) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+}
+
+@layer base {
+  html {
+    background: var(--color-studio);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--color-signal);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+}
+
+@layer components {
+  .button-primary {
+    @apply inline-flex h-12 items-center justify-center rounded-full bg-signal px-6 text-[15px] font-semibold text-ink transition-colors duration-200 hover:bg-signal-hover;
+  }
+
+  /* A native select with its own arrow, drawn in ink. */
+  .select-arrow {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 fill=%27none%27%3E%3Cpath d=%27M1 1.5l5 5 5-5%27 stroke=%27%23121519%27 stroke-width=%271.6%27/%3E%3C/svg%3E");
+    background-position: right 1.25rem center;
+    background-repeat: no-repeat;
+    background-size: 12px 8px;
+  }
+
+  .button-secondary {
+    @apply inline-flex h-12 items-center justify-center rounded-full border border-ink/15 bg-surface/60 px-6 text-[15px] font-semibold text-ink transition-colors duration-200 hover:border-ink/40;
+  }
+}
+
+/* Opening an FAQ answer eases its height where the browser supports it. */
+@supports (interpolate-size: allow-keywords) {
+  .faq-item {
+    interpolate-size: allow-keywords;
+  }
+
+  .faq-item::details-content {
+    height: 0;
+    overflow: clip;
+    transition:
+      height 0.3s var(--ease-out-soft),
+      content-visibility 0.3s allow-discrete;
+  }
+
+  .faq-item[open]::details-content {
+    height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
