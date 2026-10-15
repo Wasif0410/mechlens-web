@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "eslint",
     "posters": "node scripts/render-posters.mjs",
+    "smoke": "node scripts/smoke-test.mjs",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
