@@ -72,18 +72,18 @@ export function WaitlistForm() {
 
   const error = status.kind === "error" ? status : null;
   const fieldClass =
-    "h-12 w-full rounded-full border bg-surface px-5 text-[15px] text-ink transition-colors placeholder:text-ink-muted";
+    "h-12 w-full rounded-full border bg-white/[0.04] px-5 text-[15px] text-bone backdrop-blur-sm transition-colors placeholder:text-ash";
   const borderFor = (field: "email" | "role") =>
-    error?.field === field ? "border-red-700" : "border-ink/50 hover:border-ink focus:border-ink";
+    error?.field === field ? "border-alert" : "border-field hover:border-bone focus:border-bone";
 
   return (
     <div className="mx-auto w-full max-w-2xl">
       {status.kind === "done" ? (
-        <div className="rounded-2xl bg-studio px-6 py-5 text-center">
+        <div className="rounded-2xl border border-hairline bg-night/60 px-6 py-5 text-center backdrop-blur-md">
           <p ref={doneRef} tabIndex={-1} className="text-lg font-semibold outline-none">
             You’re on the list.
           </p>
-          <p className="mt-1 text-ink-muted">We’ll email {email.trim()} when early access opens.</p>
+          <p className="mt-1 text-ash">We’ll email {email.trim()} when early access opens.</p>
         </div>
       ) : (
         <form onSubmit={onSubmit} noValidate>
@@ -116,7 +116,7 @@ export function WaitlistForm() {
               onChange={(event) => setRole(isWaitlistRole(event.target.value) ? event.target.value : "")}
               aria-invalid={error?.field === "role" || undefined}
               aria-describedby={`${id}-message`}
-              className={`${fieldClass} select-arrow pr-11 sm:flex-1 ${role === "" ? "text-ink-muted" : ""} ${borderFor("role")}`}
+              className={`${fieldClass} select-arrow pr-11 sm:flex-1 ${role === "" ? "text-ash" : ""} ${borderFor("role")}`}
             >
               <option value="" disabled>
                 I am a…
@@ -144,7 +144,7 @@ export function WaitlistForm() {
               {status.kind === "sending" ? "Joining…" : "Join the waitlist"}
             </button>
           </div>
-          <p id={`${id}-message`} className={`mt-3 min-h-6 text-center text-sm ${error ? "text-red-800" : "text-ink-muted"}`}>
+          <p id={`${id}-message`} className={`mt-3 min-h-6 text-center text-sm ${error ? "text-alert" : "text-ash"}`}>
             {error ? error.message : "We’ll only email you about MechLens."}
           </p>
         </form>
