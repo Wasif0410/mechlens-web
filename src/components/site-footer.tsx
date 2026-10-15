@@ -1,6 +1,34 @@
 import { navigation } from "@/lib/site";
 import { Wordmark } from "./wordmark";
 
+/** The photographs on the page and the credit each licence asks for. */
+const credits = [
+  {
+    use: "Engine bay",
+    title: "Corolla Sport 8NR-FTS",
+    page: "https://commons.wikimedia.org/wiki/File:Corolla_Sport_8NR-FTS.jpg",
+    author: "TTTNIS",
+    licence: "CC0 1.0",
+    licenceUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  },
+  {
+    use: "Brake",
+    title: "Alarm bells!",
+    page: "https://commons.wikimedia.org/wiki/File:Alarm_bells!_(25681917701).jpg",
+    author: "Riley from Christchurch, New Zealand",
+    licence: "CC BY 2.0",
+    licenceUrl: "https://creativecommons.org/licenses/by/2.0/",
+  },
+  {
+    use: "Repair shop",
+    title: "Car repair shop",
+    page: "https://commons.wikimedia.org/wiki/File:Car_repair_shop.jpg",
+    author: "Martin Vorel",
+    licence: "CC BY-SA 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+  },
+];
+
 export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden border-t border-hairline">
@@ -8,7 +36,7 @@ export function SiteFooter() {
         <div className="space-y-3">
           <Wordmark className="text-bone" />
           <p className="max-w-sm text-sm text-ash">
-            AI goggles that bring verified repair information to the technician on the car.
+            AI goggles designed to bring verified repair information to the technician at the car.
           </p>
         </div>
         <nav aria-label="Footer">
@@ -30,19 +58,23 @@ export function SiteFooter() {
         <div className="space-y-2 border-t border-hairline pt-6 text-xs leading-relaxed text-ash md:col-span-2">
           <p>The goggles shown are a concept design. The final hardware may look different.</p>
           <p>
-            Engine bay photo:{" "}
-            <a
-              href="https://commons.wikimedia.org/wiki/File:Nissan_Sunny_N16_2011_Engine_bay_(QG13DE).jpg"
-              className="underline underline-offset-2 hover:text-bone"
-            >
-              “Nissan Sunny N16 2011 Engine bay (QG13DE)”
-            </a>{" "}
-            by VScode fanboy,{" "}
-            <a href="https://creativecommons.org/licenses/by/4.0/" className="underline underline-offset-2 hover:text-bone">
-              CC BY 4.0
-            </a>
-            , darkened, with an illustrated overlay.
+            Photos, shown darkened with an illustrated heads-up overlay. The repair-shop photo as shown
+            here is shared under the same CC BY-SA 4.0 license.
           </p>
+          <ul className="space-y-1">
+            {credits.map((credit) => (
+              <li key={credit.page}>
+                {credit.use}:{" "}
+                <a href={credit.page} className="underline underline-offset-2 hover:text-bone">
+                  “{credit.title}”
+                </a>{" "}
+                by {credit.author},{" "}
+                <a href={credit.licenceUrl} className="underline underline-offset-2 hover:text-bone">
+                  {credit.licence}
+                </a>
+              </li>
+            ))}
+          </ul>
           <p>© 2026 MechLens</p>
         </div>
       </div>
