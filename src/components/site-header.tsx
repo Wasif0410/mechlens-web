@@ -6,12 +6,31 @@ import { Wordmark } from "./wordmark";
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // The section crossing the middle of the screen is the one you're reading.
+  useEffect(() => {
+    const sections = navigation
+      .map((item) => document.getElementById(item.href.slice(1)))
+      .filter((section): section is HTMLElement => section !== null);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setCurrent(`#${entry.target.id}`);
+          else setCurrent((value) => (value === `#${entry.target.id}` ? null : value));
+        }
+      },
+      { rootMargin: "-50% 0px -50% 0px" },
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -28,7 +47,11 @@ export function SiteHeader() {
           <ul className="flex items-center gap-8">
             {navigation.map((item) => (
               <li key={item.href}>
-                <a href={item.href} className="text-sm text-ash transition-colors duration-200 hover:text-bone">
+                <a
+                  href={item.href}
+                  aria-current={current === item.href ? "location" : undefined}
+                  className="text-sm text-ash transition-colors duration-200 hover:text-bone aria-[current]:text-bone"
+                >
                   {item.label}
                 </a>
               </li>

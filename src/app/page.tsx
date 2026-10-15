@@ -7,6 +7,7 @@ import { InUse } from "@/components/sections/in-use";
 import { Problem } from "@/components/sections/problem";
 import { Product } from "@/components/sections/product";
 import { Shops } from "@/components/sections/shops";
+import { Statement } from "@/components/sections/statement";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { baseOpenGraph } from "@/lib/site";
@@ -28,6 +29,7 @@ export default function Home() {
       <SiteHeader />
       <main id="main">
         <Hero />
+        <Statement />
         <Problem />
         <Product />
         <InUse />

@@ -43,9 +43,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${instrument.variable} ${geistMono.variable}`}>
       <body className="min-h-dvh bg-night text-bone">
-        {/* Without JavaScript, headlines that would settle into place are simply shown. */}
+        {/* Without JavaScript, headlines that would settle into place, and words that would light up as you scroll, are simply shown. */}
         <noscript>
-          <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
+          <style>{"[data-reveal]{opacity:1!important;transform:none!important}[data-lit] *{opacity:1!important}"}</style>
         </noscript>
         <Providers>{children}</Providers>
       </body>
