@@ -108,6 +108,25 @@ Six more sites, captured the same way (load frames, then screen by screen while 
 | Review scores, stats, advisory boards, press logos | Eight Sleep, Brilliant Labs | No: nothing true to show yet |
 | Stacked cards and coloured category pills | Clay | No: the card format this redesign moved away from |
 
+## Third pass: from your feedback (14 October 2026)
 
+What you said, and what changed. Some patterns from the second round were reworked here: the statement, the heads-up loop with its player controls and the floor-plan pulses are gone, and the scroll-lit words and the opening-out view live on in the new opening scene.
+
+| Feedback | Change |
+|---|---|
+| The detour-route drawing ("Every job stops for a question") looked generic | Removed. The problem is now felt through the product: the opening puts you behind the lens at a real engine bay |
+| The scroll-lit statement's effect was good, the section wasn't | The effect is kept for the introduction to the modes; the statement section is gone |
+| The hero should be one big object with the text in it | The goggles fill the screen front on, with the headline inside the lens, where the heads-up view would show it. Scrolling pushes through the visor into what the wearer sees |
+| "It sees what you see" needed a better image | A sharp, modern engine bay (a Toyota Corolla Sport, CC0) replaces the older photo |
+| Show the modes of the glasses | Help, Guide and Inspection play over real photos in one held scene, each with its own heads-up marks and panel |
+| Explain where verified information comes from | A held scene builds one answer from a repair order written by a technician in the network: matched to the exact engine, reviewed, then shown in the heads-up view, or "not sure" |
+| The verified-answers layout should be wider, keeping the 1 to 4 process | The four steps now run beside a large stage where the record is built up |
+| The service-floor drawing looked vibe coded | Replaced with a real repair-shop photo and the heads-up view marking each role, the manager's view framing the whole floor |
+| "Everything it needs is built in" and "Be first to wear it" work | Kept; the product scene's labels and copy were tightened after review |
+| More flow between sections, held scroll scenes | The opening and the verified-answers story hold while they play; every animation is tied to the scroll position |
+
+The page flow earlier in this document describes the first dark version; the README describes the page as it is now.
+
+## What stays
 
 The Next.js and Vercel setup, the waitlist endpoint and form logic, metadata, icons, sitemap and the security headers. The redesign replaces the page layer (sections, styles, the visual assets) and adds two small dependencies: Lenis and Motion.
