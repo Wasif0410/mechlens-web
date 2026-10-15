@@ -1,230 +1,148 @@
 "use client";
 
-import { useInView } from "motion/react";
-import { useRef, useState } from "react";
-import { PauseButton } from "@/components/pause-button";
+import { type MotionValue, motion, useMotionValue, useScroll, useTransform } from "motion/react";
+import { useRef } from "react";
+import { Lock } from "@/components/lens/hud";
+import { OnPhoto, PhotoFrame } from "@/components/lens/photo-frame";
+import { type Box, photos } from "@/components/lens/photos";
 import { Reveal } from "@/components/reveal";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { preselectRole } from "@/lib/waitlist";
 
+type Placement = "left" | "above";
+
 /**
- * A service floor from above: six bays with cars on lifts. Technicians wearing MechLens get their
- * answers where they stand (the amber pulses); the senior technician stays on their own job; every
- * answer comes from the same verified source (the hub in the aisle). Coordinates are in the
- * 1200 × 560 viewBox.
+ * A real repair shop, with the heads-up view marking who MechLens is for: the technician at the
+ * car, the senior technician at the engine on the hoist, and, framing the whole floor, the manager
+ * responsible for every bay. Boxes are in the shop photo's coordinates (1000 units wide).
  */
-const bays = [
-  { x: 40, y: 40, nose: "down", tech: { x: 330, y: 150 }, wearer: true, delay: 0 },
-  { x: 420, y: 40, nose: "down", tech: { x: 710, y: 120 }, wearer: true, delay: 1.1 },
-  { x: 800, y: 40, nose: "down", tech: { x: 1090, y: 160 }, wearer: false, delay: 0 },
-  { x: 40, y: 310, nose: "up", tech: { x: 330, y: 420 }, wearer: true, delay: 2.2 },
-  { x: 420, y: 310, nose: "up", tech: { x: 710, y: 450 }, wearer: false, delay: 0 },
-  { x: 800, y: 310, nose: "up", tech: { x: 1090, y: 400 }, wearer: true, delay: 0.6 },
-] as const;
+const roles: Array<{ role: string; line: string; box: Box; placement: Placement }> = [
+  {
+    role: "Apprentices",
+    line: "Take on unfamiliar jobs, with the answer at the car.",
+    box: { x: 285, y: 318, w: 205, h: 62 },
+    // To the left, over the tool cart: to the right it would meet the hoisted engine's frame.
+    placement: "left",
+  },
+  {
+    role: "Senior technicians",
+    line: "Spend less time answering routine questions and more on the hard problems.",
+    box: { x: 618, y: 212, w: 192, h: 140 },
+    placement: "above",
+  },
+  {
+    role: "Service managers",
+    line: "One standard of information in every bay, for every car.",
+    // The whole floor, inside the photo's edges.
+    box: { x: 40, y: 150, w: 920, h: 470 },
+    placement: "left",
+  },
+];
 
-const BAY = { w: 360, h: 210 };
-const HUB = { x: 600, y: 280 };
+/** When each role's mark appears, through the photo's pass across the screen. */
+const markAt = (index: number) => 0.2 + index * 0.13;
 
-/** A car seen from above, on a two-post lift, nose towards the aisle. */
-function Car({ cx, cy, nose }: { cx: number; cy: number; nose: "up" | "down" }) {
-  const w = 104;
-  const h = 176;
-  const x = cx - w / 2;
-  const y = cy - h / 2;
-  // The windscreen sits on the nose side.
-  const screenY = nose === "down" ? y + h - 62 : y + 28;
+function Callout({ role, line, className, style }: { role: string; line: string; className: string; style: { opacity: MotionValue<number> } }) {
   return (
-    <g>
-      {/* Lift posts either side of the car. */}
-      <rect x={x - 26} y={cy - 12} width={12} height={24} rx={2} fill="rgb(255 255 255 / 0.14)" />
-      <rect x={x + w + 14} y={cy - 12} width={12} height={24} rx={2} fill="rgb(255 255 255 / 0.14)" />
-      {[
-        [x - 7, y + 26],
-        [x + w - 3, y + 26],
-        [x - 7, y + h - 54],
-        [x + w - 3, y + h - 54],
-      ].map(([wx, wy]) => (
-        <rect key={`${wx}-${wy}`} x={wx} y={wy} width={10} height={28} rx={3} fill="#0d0e10" stroke="rgb(255 255 255 / 0.18)" />
-      ))}
-      <rect x={x} y={y} width={w} height={h} rx={30} fill="#1a1d21" stroke="rgb(255 255 255 / 0.2)" strokeWidth={1.5} />
-      <rect x={x + 14} y={screenY} width={w - 28} height={34} rx={10} fill="rgb(255 255 255 / 0.06)" />
-      <rect x={x + 18} y={cy - 26} width={w - 36} height={52} rx={8} fill="rgb(255 255 255 / 0.03)" />
-    </g>
+    <motion.div aria-hidden="true" style={style} className={`absolute hidden md:block ${className}`}>
+      <span className="block w-[16rem] border-l-2 border-signal bg-night/80 px-4 py-3 backdrop-blur-md">
+        <span className="block font-mono text-[11px] tracking-[0.1em] text-signal uppercase">{role}</span>
+        <span className="mt-1.5 block text-[14px] leading-snug text-bone">{line}</span>
+      </span>
+    </motion.div>
   );
 }
 
-const floorTitle =
-  "A service floor from above: six bays with cars on lifts. Four technicians wearing MechLens get answers where they stand, all from one verified source; the two senior technicians stay on their own jobs.";
-
-/**
- * The floor plan's contents, drawn in the 1200 × 560 landscape coordinates. `running` pauses the
- * animations; it's set inline because the inline `animation` shorthand would override a class.
- */
-function Floor({ running }: { running: boolean }) {
-  const playState = running ? "running" : "paused";
+function RoleMark({ index, progress }: { index: number; progress: MotionValue<number> }) {
+  const start = markAt(index);
+  const opacity = useTransform(progress, [start, start + 0.05], [0, 1]);
+  const lock = useTransform(progress, [start, start + 0.1], [0, 1]);
+  const { role, line, box, placement } = roles[index];
+  const whole = index === roles.length - 1;
   return (
-    <>
-      {/* Floor, bay lines and the aisle. */}
-      <rect x={20} y={20} width={1160} height={520} rx={18} fill="rgb(255 255 255 / 0.015)" stroke="rgb(255 255 255 / 0.08)" />
-      <line x1={40} y1={280} x2={1160} y2={280} stroke="rgb(242 183 5 / 0.25)" strokeWidth={2} strokeDasharray="18 14" />
-      {bays.map((bay) => (
-        <g key={`${bay.x}-${bay.y}`}>
-          <path
-            d={`M${bay.x} ${bay.y}V${bay.y + BAY.h}M${bay.x + BAY.w} ${bay.y}V${bay.y + BAY.h}`}
-            stroke="rgb(255 255 255 / 0.1)"
-            strokeWidth={2}
-          />
-          <Car cx={bay.x + BAY.w / 2 - 20} cy={bay.y + BAY.h / 2} nose={bay.nose} />
-        </g>
-      ))}
-
-      {/* Every answer comes from the same verified source. */}
-      {bays
-        .filter((bay) => bay.wearer)
-        .map((bay) => (
-          <line
-            key={`link-${bay.x}-${bay.y}`}
-            x1={HUB.x}
-            y1={HUB.y}
-            x2={bay.tech.x}
-            y2={bay.tech.y}
-            stroke="rgb(242 183 5 / 0.35)"
-            strokeWidth={1.5}
-            strokeDasharray="4 8"
-            style={{ animation: "dash-flow 1.6s linear infinite", animationPlayState: playState }}
-          />
-        ))}
-      <rect x={HUB.x - 16} y={HUB.y - 16} width={32} height={32} rx={7} fill="var(--color-night)" stroke="var(--color-signal)" strokeWidth={2} />
-      <rect x={HUB.x - 6} y={HUB.y - 6} width={12} height={12} fill="var(--color-signal)" />
-
-      {/* Technicians. Wearers pulse each time a question is answered. */}
-      {bays.map((bay) => (
-        <g key={`tech-${bay.x}-${bay.y}`}>
-          {bay.wearer && (
-            <circle
-              cx={bay.tech.x}
-              cy={bay.tech.y}
-              r={14}
-              fill="none"
-              stroke="var(--color-signal)"
-              strokeWidth={2}
-              style={{
-                transformBox: "fill-box",
-                transformOrigin: "center",
-                animation: `ping-ring 3.2s ease-out ${bay.delay}s infinite`,
-                animationPlayState: playState,
-              }}
-            />
-          )}
-          <circle cx={bay.tech.x} cy={bay.tech.y} r={10} fill="var(--color-bone)" fillOpacity={bay.wearer ? 1 : 0.55} />
-        </g>
-      ))}
-    </>
-  );
-}
-
-const legend = [
-  {
-    mark: "pulse",
-    title: "Apprentices keep moving",
-    body: "They can work through unfamiliar jobs on their own, asking as they go.",
-  },
-  {
-    mark: "dot",
-    title: "Seniors stay on their own work",
-    body: "Routine questions no longer have to pull your most experienced technicians off the car.",
-  },
-  {
-    mark: "hub",
-    title: "One standard across the floor",
-    body: "Designed so every technician gets the same sourced information for the same vehicle.",
-  },
-] as const;
-
-function LegendMark({ mark }: { mark: (typeof legend)[number]["mark"] }) {
-  return (
-    <svg viewBox="0 0 24 24" className="size-6 shrink-0" aria-hidden="true">
-      {mark === "pulse" && (
-        <>
-          <circle cx={12} cy={12} r={10} fill="none" stroke="var(--color-signal)" strokeOpacity={0.5} />
-          <circle cx={12} cy={12} r={4.5} fill="var(--color-bone)" />
-        </>
+    <OnPhoto box={box} aspect={photos.shop.aspect}>
+      <Lock lock={lock} opacity={opacity} />
+      {whole ? (
+        // The manager's view is the floor itself: the callout sits inside the frame, top left.
+        <Callout role={role} line={line} style={{ opacity }} className="top-6 left-6" />
+      ) : placement === "left" ? (
+        <Callout role={role} line={line} style={{ opacity }} className="top-1/2 right-full mr-5 -translate-y-1/2" />
+      ) : (
+        <Callout role={role} line={line} style={{ opacity }} className="right-0 bottom-full mb-5" />
       )}
-      {mark === "dot" && <circle cx={12} cy={12} r={4.5} fill="var(--color-bone)" fillOpacity={0.55} />}
-      {mark === "hub" && (
-        <>
-          <rect x={5} y={5} width={14} height={14} rx={3} fill="none" stroke="var(--color-signal)" />
-          <rect x={9.5} y={9.5} width={5} height={5} fill="var(--color-signal)" />
-        </>
-      )}
-    </svg>
+      {/* On phones, numbered marks; the list under the photo says what they mean. */}
+      {/* The floor-wide frame runs off a phone's screen at the sides, so its number sits at the top centre. */}
+      <motion.span
+        aria-hidden="true"
+        style={{ opacity }}
+        className={`absolute -top-3 flex size-6 items-center justify-center rounded-full bg-signal font-mono text-[11px] text-night md:hidden ${whole ? "left-1/2 -translate-x-1/2" : "-left-3"}`}
+      >
+        {index + 1}
+      </motion.span>
+    </OnPhoto>
   );
 }
 
 export function Shops() {
-  const planRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(planRef, { margin: "-10% 0px" });
+  const ref = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
-  const [paused, setPaused] = useState(false);
-  const running = inView && !paused;
+  // From the photo's top entering the screen to its bottom leaving: a slow push in, marks one by one.
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const settled = useMotionValue(1);
+  const progress = reduced ? settled : scrollYProgress;
+  const zoom = useTransform(progress, [0, 1], [1.12, 1]);
 
   return (
-    <section id="shops" aria-labelledby="shops-title" className="relative overflow-hidden pt-32 pb-12 sm:pt-44 sm:pb-16">
-      <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-end lg:gap-24">
-          <Reveal>
-            <h2 id="shops-title" className="display-lg max-w-[13ch]">
-              Built for the whole service floor.
-            </h2>
-          </Reveal>
-          <div>
-            <p className="lead">
-              For dealership service departments, independent shops and technician schools. Tell us
-              about your team and we’ll follow up about a pilot.
-            </p>
-            <a href="#waitlist" {...preselectRole("shop")} className="button-primary mt-8">
-              Talk to us about a pilot
-            </a>
-          </div>
+    <section id="shops" aria-labelledby="shops-title" className="relative overflow-x-clip pt-32 sm:pt-44">
+      <div className="mx-auto grid max-w-[1320px] gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-end lg:gap-24">
+        <Reveal>
+          <h2 id="shops-title" className="display-lg max-w-[13ch]">
+            Built for the whole service floor.
+          </h2>
+        </Reveal>
+        <div>
+          <p className="lead">
+            For dealership service departments, independent shops and technician schools. Tell us
+            about your team and we’ll follow up about a pilot.
+          </p>
+          <a href="#waitlist" {...preselectRole("shop")} className="button-primary mt-8">
+            Talk to us about a pilot
+          </a>
         </div>
-
-        <figure className="mt-20 sm:mt-24">
-          <div ref={planRef} className="relative">
-            {/* Landscape from small screens up; on phones the same floor turned upright, so it stays legible. */}
-            <svg viewBox="0 0 1200 560" className="hidden w-full sm:block" role="img" aria-labelledby="floor-title-wide">
-              <title id="floor-title-wide">{floorTitle}</title>
-              <Floor running={running} />
-            </svg>
-            <svg viewBox="0 0 560 1200" className="mx-auto block w-full max-w-[26rem] sm:hidden" role="img" aria-labelledby="floor-title-tall">
-              <title id="floor-title-tall">{floorTitle}</title>
-              <g transform="translate(560 0) rotate(90)">
-                <Floor running={running} />
-              </g>
-            </svg>
-            {!reduced && (
-              <PauseButton
-                paused={paused}
-                onToggle={() => setPaused((value) => !value)}
-                label="the floor plan"
-                className="absolute right-3 bottom-3 sm:right-5 sm:bottom-5"
-              />
-            )}
-          </div>
-          <figcaption className="sr-only">An illustration, not a real shop.</figcaption>
-        </figure>
-
-        <ul className="mt-12 grid gap-8 md:grid-cols-3">
-          {legend.map((item) => (
-            <li key={item.title} className="flex gap-4">
-              <LegendMark mark={item.mark} />
-              <div>
-                <h3 className="text-[17px] font-medium tracking-[-0.01em]">{item.title}</h3>
-                <p className="mt-1 text-[15px] leading-relaxed text-ash">{item.body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
       </div>
+
+      <figure className="mt-20 sm:mt-24">
+        <div ref={ref} className="relative aspect-[4/5] overflow-hidden [container-type:size] sm:aspect-[16/10] lg:aspect-[16/8]">
+          {/* On phones the 4:5 frame draws the photo about 1.9 times the screen's width. */}
+          <PhotoFrame photo={photos.shop} fx={0.47} fy={0.48} zoom={reduced ? 1 : zoom} sizes="(max-width: 639px) 190vw, 100vw">
+            <div className="absolute inset-0 bg-night/25" />
+            {roles.map((item, index) => (
+              <RoleMark key={item.role} index={index} progress={progress} />
+            ))}
+          </PhotoFrame>
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night to-transparent" />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-night to-transparent" />
+        </div>
+        <div className="mx-auto max-w-[1320px] px-5 sm:px-8">
+          {/* What the marks say, as text: shown on phones, and for screen readers everywhere. */}
+          <ol className="mt-8 grid gap-6 md:sr-only">
+            {roles.map((item, index) => (
+              <li key={item.role} className="flex gap-4">
+                <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-signal font-mono text-[11px] text-night">
+                  {index + 1}
+                </span>
+                <span>
+                  <span className="block text-[17px] font-medium tracking-[-0.01em]">{item.role}</span>
+                  <span className="mt-1 block text-[15px] leading-relaxed text-ash">{item.line}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <figcaption className="mt-8 text-sm text-ash">
+            An illustration of what MechLens is designed to do for each role, drawn over a real shop.
+          </figcaption>
+        </div>
+      </figure>
     </section>
   );
 }
