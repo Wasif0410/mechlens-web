@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { brand } from "@/lib/brand";
 
 /**
  * Geometry for the MechLens goggles, built from one 2D outline: a wide visor with a nose notch.
@@ -180,8 +181,10 @@ const LENS_Z = 0.065;
  */
 export function lensParts(): {
   geometry: THREE.BufferGeometry;
+  hudGeometry: THREE.BufferGeometry;
   mask: THREE.CanvasTexture;
   tint: THREE.CanvasTexture;
+  hud: THREE.CanvasTexture;
 } {
   const edge = offsetOutline(-0.035);
   const xs = edge.map((p) => p.x);
@@ -203,6 +206,19 @@ export function lensParts(): {
     (maxX - minX) / WRAP_RADIUS,
   );
   geometry.translate(0, (minY + maxY) / 2, -WRAP_RADIUS);
+
+  // The heads-up overlay sits a hair in front of the lens, on the same section of the cylinder.
+  const hudGeometry = new THREE.CylinderGeometry(
+    radius + 0.003,
+    radius + 0.003,
+    maxY - minY,
+    160,
+    1,
+    true,
+    minX / WRAP_RADIUS,
+    (maxX - minX) / WRAP_RADIUS,
+  );
+  hudGeometry.translate(0, (minY + maxY) / 2, -WRAP_RADIUS);
 
   const width = 2048;
   const height = Math.round((width * (maxY - minY)) / (maxX - minX));
@@ -226,7 +242,58 @@ export function lensParts(): {
   }
   const mask = new THREE.CanvasTexture(canvas);
   mask.anisotropy = 8;
-  return { geometry, mask, tint: lensTint(width / 4, height / 4) };
+  return {
+    geometry,
+    hudGeometry,
+    mask,
+    tint: lensTint(width / 4, height / 4),
+    hud: hudOverlay(width / 2, height / 2),
+  };
+}
+
+/**
+ * The heads-up overlay as seen from outside: amber corner brackets around a part and two short
+ * lines of answer below them, over one eye.
+ */
+function hudOverlay(width: number, height: number): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.strokeStyle = brand.signal;
+    ctx.fillStyle = brand.signal;
+    ctx.lineWidth = Math.max(2, width * 0.004);
+    const bw = width * 0.16;
+    const bh = height * 0.3;
+    const x = width * 0.2;
+    const y = height * 0.24;
+    const arm = bw * 0.24;
+    ctx.beginPath();
+    ctx.moveTo(x, y + arm);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + arm, y);
+    ctx.moveTo(x + bw - arm, y);
+    ctx.lineTo(x + bw, y);
+    ctx.lineTo(x + bw, y + arm);
+    ctx.moveTo(x + bw, y + bh - arm);
+    ctx.lineTo(x + bw, y + bh);
+    ctx.lineTo(x + bw - arm, y + bh);
+    ctx.moveTo(x + arm, y + bh);
+    ctx.lineTo(x, y + bh);
+    ctx.lineTo(x, y + bh - arm);
+    ctx.stroke();
+    const lineH = height * 0.022;
+    ctx.globalAlpha = 0.9;
+    ctx.fillRect(x, y + bh + height * 0.06, bw * 1.2, lineH);
+    ctx.globalAlpha = 0.55;
+    ctx.fillRect(x, y + bh + height * 0.06 + lineH * 2.2, bw * 0.8, lineH);
+  }
+  const hud = new THREE.CanvasTexture(canvas);
+  hud.colorSpace = THREE.SRGBColorSpace;
+  hud.anisotropy = 8;
+  return hud;
 }
 
 /** Smoked glass, lighter at the top, with a soft diagonal sheen from the upper left. */
@@ -237,9 +304,9 @@ function lensTint(width: number, height: number): THREE.CanvasTexture {
   const ctx = canvas.getContext("2d");
   if (ctx) {
     const base = ctx.createLinearGradient(0, 0, 0, height);
-    base.addColorStop(0, "#4a5664");
-    base.addColorStop(0.45, "#1d252e");
-    base.addColorStop(1, "#0c1015");
+    base.addColorStop(0, "#4b5765");
+    base.addColorStop(0.45, "#1a222b");
+    base.addColorStop(1, "#0a0d11");
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, width, height);
 

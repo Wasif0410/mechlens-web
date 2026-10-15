@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/reveal";
 import { waitlistRoles } from "@/lib/waitlist";
 
 const shopRole = waitlistRoles.find((role) => role.value === "shop")?.label ?? "Shop or dealership";
@@ -31,25 +32,24 @@ const questions = [
 
 export function Faq() {
   return (
-    <section id="faq" aria-labelledby="faq-title" className="border-t border-line py-24 sm:py-32">
-      <div className="mx-auto grid max-w-[1240px] gap-10 px-5 sm:px-8 lg:grid-cols-[5fr_7fr] lg:gap-20">
-        <h2
-          id="faq-title"
-          className="text-[clamp(2.125rem,4.4vw,3.5rem)] leading-[1.05] font-medium tracking-[-0.035em]"
-        >
-          Common questions.
-        </h2>
-        <div className="border-b border-line">
+    <section id="faq" aria-labelledby="faq-title" className="py-32 sm:py-40">
+      <div className="mx-auto grid max-w-[1320px] gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] lg:gap-24">
+        <Reveal>
+          <h2 id="faq-title" className="display-lg">
+            Questions.
+          </h2>
+        </Reveal>
+        <div className="border-b border-hairline">
           {questions.map((item) => (
-            <details key={item.q} className="faq-item group border-t border-line">
-              <summary className="relative cursor-pointer list-none py-6 pr-12 text-lg font-semibold tracking-[-0.01em] [&::-webkit-details-marker]:hidden">
+            <details key={item.q} className="faq-item group border-t border-hairline">
+              <summary className="relative cursor-pointer list-none py-6 pr-12 text-lg font-medium tracking-[-0.01em] [&::-webkit-details-marker]:hidden">
                 {item.q}
                 <span
                   aria-hidden="true"
-                  className="absolute top-1/2 right-2 size-3.5 -translate-y-1/2 before:absolute before:top-1/2 before:left-0 before:h-0.5 before:w-full before:-translate-y-1/2 before:bg-ink after:absolute after:top-1/2 after:left-0 after:h-0.5 after:w-full after:-translate-y-1/2 after:rotate-90 after:bg-ink after:transition-transform after:duration-300 group-open:after:rotate-0"
+                  className="absolute top-1/2 right-2 size-3.5 -translate-y-1/2 before:absolute before:top-1/2 before:left-0 before:h-px before:w-full before:-translate-y-1/2 before:bg-bone after:absolute after:top-1/2 after:left-0 after:h-px after:w-full after:-translate-y-1/2 after:rotate-90 after:bg-bone after:transition-transform after:duration-300 group-open:after:rotate-0"
                 />
               </summary>
-              <p className="max-w-xl pb-7 leading-relaxed text-ink-muted">{item.a}</p>
+              <p className="max-w-xl pb-7 leading-relaxed text-ash">{item.a}</p>
             </details>
           ))}
         </div>

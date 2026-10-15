@@ -1,0 +1,35 @@
+"use client";
+
+import { useFrame, useThree } from "@react-three/fiber";
+import { useRef } from "react";
+import * as THREE from "three";
+import type { PartName } from "./poster";
+import { PART_ANCHORS } from "./scene";
+
+const point = new THREE.Vector3();
+
+/**
+ * Moves plain DOM labels to the on-screen position of each labelled part, every frame. Place it
+ * inside the group that turns with the model; each label element is positioned absolutely over
+ * the canvas with its anchor point at the element's top left corner.
+ */
+export function AnchorProjector({ labelsRef }: { labelsRef: React.RefObject<Partial<Record<PartName, HTMLElement | null>>> }) {
+  const markerRef = useRef<THREE.Group>(null);
+  const { camera, size } = useThree();
+  useFrame(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+    // The scene updates world matrices during render, after this runs; update ours now so the
+    // labels don't trail the model by a frame.
+    marker.updateWorldMatrix(true, false);
+    for (const part of Object.keys(PART_ANCHORS) as PartName[]) {
+      const element = labelsRef.current[part];
+      if (!element) continue;
+      point.set(...PART_ANCHORS[part]).applyMatrix4(marker.matrixWorld).project(camera);
+      const x = ((point.x + 1) / 2) * size.width;
+      const y = ((1 - point.y) / 2) * size.height;
+      element.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    }
+  });
+  return <group ref={markerRef} />;
+}
