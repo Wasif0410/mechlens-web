@@ -12,6 +12,6 @@ export type ShotName = "pov";
 export const shots: Record<ShotName, Shot> = {
   pov: {
     still: engineBay,
-    alt: "An engine bay seen through the goggles: a green battery at the right, below a black ribbed air filter box.",
+    alt: "A real engine bay, the view a technician has through the goggles: a green battery at the right, below a black ribbed air filter box.",
   },
 };

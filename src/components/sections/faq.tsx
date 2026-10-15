@@ -14,7 +14,7 @@ const questions = [
   },
   {
     q: "Where does the information come from?",
-    a: "From professional repair information that is verified before MechLens uses it. Answers show where they came from.",
+    a: "MechLens is designed to answer only from professional repair information that has been verified, and to show where each answer came from.",
   },
   {
     q: "Is it meant to replace experienced technicians?",

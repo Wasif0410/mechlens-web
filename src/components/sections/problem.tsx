@@ -3,6 +3,7 @@
 import { type MotionValue, motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Reveal } from "@/components/reveal";
+import { usePinning } from "@/lib/use-pinning";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 type Point = { x: number; y: number };
@@ -157,23 +158,32 @@ function Route({ layout, progress, className, side }: { layout: Layout; progress
 }
 
 export function Problem() {
-  const wideRef = useRef<HTMLElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const wideRouteRef = useRef<HTMLDivElement>(null);
   const narrowRef = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
-  // Wide screens: the section pins and the route draws in place as you scroll through it.
-  const { scrollYProgress: wideProgress } = useScroll({ target: wideRef, offset: ["start start", "end end"] });
+  const pinning = usePinning();
+  // Tablets and up with room to pin: the section pins and the route draws in place as you scroll.
+  const { scrollYProgress: pinnedProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  // Wide but short screens (a laptop at high zoom, a phone on its side): it draws as it passes.
+  const { scrollYProgress: passingProgress } = useScroll({ target: wideRouteRef, offset: ["start 0.85", "end 0.5"] });
   // Phones: the vertical route draws as it passes through the screen.
   const { scrollYProgress: narrowProgress } = useScroll({ target: narrowRef, offset: ["start 0.8", "end 0.55"] });
-  const finished = useTransform(wideProgress, () => 1);
+  const finished = useTransform(pinnedProgress, () => 1);
+  const wideProgress = reduced ? finished : pinning ? pinnedProgress : passingProgress;
 
   return (
     <section
-      ref={wideRef}
+      ref={sectionRef}
       aria-labelledby="problem-title"
-      className={`relative ${reduced ? "" : "md:h-[260vh]"}`}
+      className={`relative ${reduced ? "" : "pin:h-[260vh]"}`}
     >
+      {/*
+        Pinned, the scene is centred in the screen below the header, and the route is never wider
+        than the height left for it allows, so the headline and route always fit together.
+      */}
       <div
-        className={`overflow-hidden py-32 sm:py-40 ${reduced ? "" : "md:sticky md:top-0 md:flex md:h-svh md:flex-col md:justify-center md:py-0"}`}
+        className={`overflow-hidden py-32 sm:py-40 ${reduced ? "" : "pin:sticky pin:top-0 pin:flex pin:h-svh pin:flex-col pin:justify-center pin:py-0 pin:pt-16"}`}
       >
         <div className="mx-auto w-full max-w-[1320px] px-5 sm:px-8">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-end">
@@ -183,13 +193,15 @@ export function Problem() {
               </h2>
             </Reveal>
             <p className="lead">
-              A part you don’t recognise, a spec you can’t remember, a variant you’re not sure of.
+              A part you don’t recognize, a spec you can’t remember, a variant you’re not sure of.
               Each answer means a detour away from the car.
             </p>
           </div>
 
           <div className="mt-16 md:mt-[clamp(3rem,9vh,6rem)]">
-            <Route layout={wide} progress={reduced ? finished : wideProgress} side="above" className="hidden md:block" />
+            <div ref={wideRouteRef} className={`hidden md:block ${reduced ? "" : "pin:max-w-[calc((100svh_-_23rem)*1200/440)]"}`}>
+              <Route layout={wide} progress={wideProgress} side="above" className="w-full" />
+            </div>
             <div ref={narrowRef} className="md:hidden">
               <Route layout={narrow} progress={reduced ? finished : narrowProgress} side="right" className="mx-auto max-w-[360px]" />
             </div>

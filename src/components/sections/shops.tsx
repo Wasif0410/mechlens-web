@@ -1,8 +1,10 @@
 "use client";
 
 import { useInView } from "motion/react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { PauseButton } from "@/components/pause-button";
 import { Reveal } from "@/components/reveal";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { preselectRole } from "@/lib/waitlist";
 
 /**
@@ -52,10 +54,14 @@ function Car({ cx, cy, nose }: { cx: number; cy: number; nose: "up" | "down" }) 
 }
 
 const floorTitle =
-  "A service floor from above: six bays with cars on lifts. Four technicians wearing MechLens get answers where they stand, all from one verified source; the senior technician stays on their own job.";
+  "A service floor from above: six bays with cars on lifts. Four technicians wearing MechLens get answers where they stand, all from one verified source; the two senior technicians stay on their own jobs.";
 
-/** The floor plan's contents, drawn in the 1200 × 560 landscape coordinates. */
-function Floor() {
+/**
+ * The floor plan's contents, drawn in the 1200 × 560 landscape coordinates. `running` pauses the
+ * animations; it's set inline because the inline `animation` shorthand would override a class.
+ */
+function Floor({ running }: { running: boolean }) {
+  const playState = running ? "running" : "paused";
   return (
     <>
       {/* Floor, bay lines and the aisle. */}
@@ -85,7 +91,7 @@ function Floor() {
             stroke="rgb(242 183 5 / 0.35)"
             strokeWidth={1.5}
             strokeDasharray="4 8"
-            style={{ animation: "dash-flow 1.6s linear infinite" }}
+            style={{ animation: "dash-flow 1.6s linear infinite", animationPlayState: playState }}
           />
         ))}
       <rect x={HUB.x - 16} y={HUB.y - 16} width={32} height={32} rx={7} fill="var(--color-night)" stroke="var(--color-signal)" strokeWidth={2} />
@@ -106,6 +112,7 @@ function Floor() {
                 transformBox: "fill-box",
                 transformOrigin: "center",
                 animation: `ping-ring 3.2s ease-out ${bay.delay}s infinite`,
+                animationPlayState: playState,
               }}
             />
           )}
@@ -120,17 +127,17 @@ const legend = [
   {
     mark: "pulse",
     title: "Apprentices keep moving",
-    body: "They work through unfamiliar jobs on their own, asking as they go.",
+    body: "They can work through unfamiliar jobs on their own, asking as they go.",
   },
   {
     mark: "dot",
     title: "Seniors stay on their own work",
-    body: "Fewer routine questions pulling your most experienced technicians off the car.",
+    body: "Routine questions no longer have to pull your most experienced technicians off the car.",
   },
   {
     mark: "hub",
     title: "One standard across the floor",
-    body: "Every technician gets the same sourced information for the same vehicle.",
+    body: "Designed so every technician gets the same sourced information for the same vehicle.",
   },
 ] as const;
 
@@ -157,6 +164,9 @@ function LegendMark({ mark }: { mark: (typeof legend)[number]["mark"] }) {
 export function Shops() {
   const planRef = useRef<HTMLDivElement>(null);
   const inView = useInView(planRef, { margin: "-10% 0px" });
+  const reduced = usePrefersReducedMotion();
+  const [paused, setPaused] = useState(false);
+  const running = inView && !paused;
 
   return (
     <section id="shops" aria-labelledby="shops-title" className="relative overflow-hidden pt-32 pb-12 sm:pt-44 sm:pb-16">
@@ -179,18 +189,26 @@ export function Shops() {
         </div>
 
         <figure className="mt-20 sm:mt-24">
-          <div ref={planRef} className={`relative ${inView ? "" : "[&_*]:[animation-play-state:paused]"}`}>
+          <div ref={planRef} className="relative">
             {/* Landscape from small screens up; on phones the same floor turned upright, so it stays legible. */}
             <svg viewBox="0 0 1200 560" className="hidden w-full sm:block" role="img" aria-labelledby="floor-title-wide">
               <title id="floor-title-wide">{floorTitle}</title>
-              <Floor />
+              <Floor running={running} />
             </svg>
             <svg viewBox="0 0 560 1200" className="mx-auto block w-full max-w-[26rem] sm:hidden" role="img" aria-labelledby="floor-title-tall">
               <title id="floor-title-tall">{floorTitle}</title>
               <g transform="translate(560 0) rotate(90)">
-                <Floor />
+                <Floor running={running} />
               </g>
             </svg>
+            {!reduced && (
+              <PauseButton
+                paused={paused}
+                onToggle={() => setPaused((value) => !value)}
+                label="the floor plan"
+                className="absolute right-3 bottom-3 sm:right-5 sm:bottom-5"
+              />
+            )}
           </div>
           <figcaption className="sr-only">An illustration, not a real shop.</figcaption>
         </figure>

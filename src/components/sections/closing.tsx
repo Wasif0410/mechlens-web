@@ -10,9 +10,10 @@ export function Closing() {
         {/*
           The goggles, front on, closing the page the way it opened. The render has empty space
           around the goggles, so the frame crops it; the strap is on the left, so the image shifts
-          right to centre the visor under the headline.
+          right to centre the visor under the headline. Its height is capped at 28% of the screen, so
+          the form is still on screen when a "Join the waitlist" link lands here.
         */}
-        <div aria-hidden="true" className="relative mx-auto aspect-[2/1] w-full max-w-[760px] overflow-hidden">
+        <div aria-hidden="true" className="relative mx-auto aspect-[2/1] w-[min(100%,760px,56svh)] overflow-hidden">
           <Image
             src={frontView}
             alt=""

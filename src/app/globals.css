@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Screens big enough for a pinned scroll scene (keep in step with src/lib/use-pinning.ts). */
+@custom-variant pin (@media (min-width: 48rem) and (min-height: 40rem));
+
 /*
  * MechLens design tokens: "the view from under the hood".
  *

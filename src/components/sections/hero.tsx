@@ -38,7 +38,7 @@ export function Hero() {
         <div className="absolute inset-0 [mask-image:linear-gradient(to_right,transparent,#000_6%)]">
           <GogglesViewer
             poster={heroPoster}
-            alt="The MechLens goggles, a concept design: a wraparound smoked visor in a graphite frame, with a camera at the centre of the brow and an amber-ringed button on the wearer’s right, lit from behind in a dark studio."
+            alt="The MechLens goggles, a concept design: a wraparound smoked visor in a graphite frame, with a camera at the center of the brow and an amber-ringed button on the wearer’s right, lit from behind in a dark studio."
             sizes="(max-width: 1023px) 100vw, 56vw"
             preload
             canvas={{ view: "hero", interactive: true, float: !reduced }}
@@ -50,8 +50,8 @@ export function Hero() {
         </p>
       </div>
 
-      {/* The copy lets drags through to the goggles; only the links take the pointer. */}
-      <div className="pointer-events-none relative mx-auto w-full max-w-[1320px] px-5 pt-10 pb-14 sm:px-8 lg:pt-0 lg:pb-20">
+      {/* On wide screens the copy lets drags through to the goggles; only the links take the pointer. */}
+      <div className="relative lg:pointer-events-none mx-auto w-full max-w-[1320px] px-5 pt-10 pb-14 sm:px-8 lg:pt-0 lg:pb-20">
         <h1 id="hero-title" className="display-xl max-w-[11ch]">
           <span className="block animate-rise-in [animation-delay:300ms]">The answer,</span>
           <span className="block animate-rise-in [animation-delay:380ms]">in your line of sight.</span>
@@ -60,7 +60,7 @@ export function Hero() {
           MechLens is building AI goggles for automotive technicians. Look at a part, ask about it,
           and get verified repair information for the exact vehicle.
         </p>
-        <div className="pointer-events-auto mt-10 flex w-fit animate-rise-in flex-wrap items-center gap-x-7 gap-y-4 [animation-delay:620ms]">
+        <div className="mt-10 flex lg:pointer-events-auto w-fit animate-rise-in flex-wrap items-center gap-x-7 gap-y-4 [animation-delay:620ms]">
           <a href="#waitlist" className="button-primary">
             Join the waitlist
           </a>
