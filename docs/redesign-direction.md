@@ -69,10 +69,10 @@ The goggles are the code-built 3D model, upgraded for the dark scene: a studio m
 
 ### Page flow (as built)
 
-1. **Hero, one full screen.** The goggles, large and lit from behind, on the right; drag to turn them. The headline sits bottom left, Vorelios-style: "The answer, in your line of sight." A one-line subhead says what it is (AI goggles for automotive technicians), with one primary button (Join the waitlist) and a quiet text link.
-2. **The problem: the detour route.** "Every job stops for a question." Below it, a route from "Car on the lift" to "Job done" takes a detour for each question (search the manual, ask a senior technician, find a video), each with the question that caused it. As you scroll, the route draws itself, dims, and the direct amber line MechLens offers draws straight through. The scene is pinned while it plays from tablet width up; on phones the route runs top to bottom and draws as it passes. (An earlier draft drifted technician questions behind the statement; it said less, so the route replaced it.)
-3. **The product, a pinned scene of about three screens.** The only scroll-driven moment on the page. The goggles stay fixed while three short statements pass beside them, and the model turns to show each part: a camera at your brow, your voice and one button, the answer in your line of sight.
-4. **In use, one screen.** The technician's view of a real engine bay: the question appears, the amber outline locks onto the part, and the answer appears beside it, as a short loop. This replaces the numbered steps and the chat bubbles.
+1. **Hero, one full screen.** The goggles, large and lit from behind, on the right; drag to turn them. The headline sits bottom left, Vorelios-style: "The answer, in your line of sight." A one-line subhead says what it is (AI goggles for automotive technicians), with one primary button (Join the waitlist) and a quiet text link. Below it, one sentence whose words light up as you read gives the company's case: every car is a different combination of model, year and engine, so the right answer has to be for the exact vehicle.
+2. **The problem: the detour route.** "Every job stops for a question." Below it, a route from "Car on the lift" to "Job done" takes a detour for each question (search the manual, ask a senior technician, find a video), each with the question that caused it. As you scroll, the route draws itself, dims, and the direct amber line MechLens offers draws straight through. The scene is pinned while it plays on screens at least 768px wide and 640px tall, with the route sized to fit under the headline; shorter screens see it draw as it passes, and on phones the route runs top to bottom. (An earlier draft drifted technician questions behind the statement; it said less, so the route replaced it.)
+3. **The product, a pinned scene of about four screens.** The goggles stay fixed while four short statements pass beside them. The model turns to show each part (a camera at your brow, your voice and one button, the answer in your line of sight), then comes apart into its layers with every part labelled: "Built as one piece."
+4. **In use, one screen.** The technician's view of a real engine bay: the question appears, the amber outline locks onto the part, and the answer appears beside it, as a short loop. The view opens out to the full width of the screen as it arrives, with a timeline and a pause button laid over it like a player's controls. This replaces the numbered steps and the chat bubbles.
 5. **Verified answers: the evidence chain.** "Verified answers, or a clear 'not sure.'" A spine draws down the page through four steps, each shown as the object a technician would recognise: a stamped vehicle plate (the exact vehicle), a crop of the part in the engine bay (the part in front of you), a paper service record that gets a "Reviewed" stamp (a reviewed record), and the answer with its source beside the "not sure" it gives when a link is missing. This is the moat, so it gets room.
 6. **For shops: the service floor.** "Built for the whole service floor." A top-down plan of six bays with cars on lifts: technicians wearing MechLens pulse as their questions are answered, all linked to one verified source in the aisle, while the senior technician stays on their own job. Three short points sit beneath it as the plan's legend, with "Talk to us about a pilot". On phones the floor turns upright so it stays legible.
 7. **FAQ, the final call to action and the footer.** A minimal accordion. The closing shows the goggles front on above "Be first to wear it." and the waitlist form, and the footer carries a giant wordmark (as isoquant and Cyclon do).
@@ -80,9 +80,9 @@ The goggles are the code-built 3D model, upgraded for the dark scene: a studio m
 ### Motion (based on the measurements above)
 
 - **Page load:** the hero image fades up from black over 1.2 s. Headline lines rise 24 px while sharpening from an 8 px blur, over 0.9 s with `cubic-bezier(0.22, 1, 0.36, 1)`, 80 ms apart. The navigation fades in last.
-- **Scrolling:** smooth scrolling with Lenis. Three scroll-driven scenes, built with Motion's `useScroll`: the detour route (pinned), the product scene (pinned) and the evidence chain's spine. Each one shows what MechLens does rather than decorating the page.
+- **Scrolling:** smooth scrolling with Lenis. Scroll-driven scenes, built with Motion's `useScroll`: the statement lighting up, the detour route (pinned), the product scene with its exploded view (pinned), the heads-up view opening out and the evidence chain's spine. Each one shows what MechLens does rather than decorating the page.
 - **Section headlines:** a single quiet reveal (opacity and 16 px of movement, 0.6 s). Body text and lists stay put. Cards are not staggered in.
-- **Ambient:** the heads-up loop and the floor plan's pulses, both only while on screen, and the hero model floating gently. Nothing else moves on its own.
+- **Ambient:** the heads-up loop and the floor plan's pulses, both only while on screen and both with a pause button, and the hero model floating gently. Nothing else moves on its own.
 - **Interaction:** 0.15–0.25 s.
 - **Reduced motion:** every scene drawn in its final state, still frames for the goggles, no pinning and no loops.
 
@@ -93,6 +93,21 @@ The goggles are the code-built 3D model, upgraded for the dark scene: a studio m
 - A monospace face anywhere except machine readouts; small uppercase labels above every heading.
 - Content that fades in as you scroll, section after section.
 
-## What stays
+## Second round of references (14 October 2026)
+
+Six more sites, captured the same way (load frames, then screen by screen while scrolling): 1X NEO, Brilliant Labs, Apple Vision Pro (including its dark Technology section), Eight Sleep, Linear and Clay.
+
+| Pattern | Where | Taken for MechLens |
+|---|---|---|
+| The product comes apart into labelled layers as you scroll | Brilliant Labs (exploded glasses with callouts), Vision Pro (teardown of the headset) | Yes: the product scene's fourth beat takes the goggles apart (lens forward, brow bar with the camera and microphones up, side modules out, face seal and strap back) with amber labels on each part |
+| A statement whose words light up as you read | Brilliant Labs, Vision Pro, Linear (two-tone statement) | Yes: the company's case in one sentence, right after the hero |
+| Media that opens out from a framed picture to the full width of the screen | Vision Pro, NEO | Yes: the heads-up view |
+| Player controls on every film, including pause | Vision Pro, NEO | Yes: the heads-up loop and the floor plan have pause buttons, and the loop's timeline sits in the frame like a player's |
+| Navigation that shows which chapter you're in | NEO (chapter bar), Vision Pro (product bar) | Yes: the header marks the current section |
+| Lifestyle films and photography | NEO, Eight Sleep, Vision Pro | Not yet: there is no real footage of the hardware. The engine bay photo stands in until there is |
+| Review scores, stats, advisory boards, press logos | Eight Sleep, Brilliant Labs | No: nothing true to show yet |
+| Stacked cards and coloured category pills | Clay | No: the card format this redesign moved away from |
+
+
 
 The Next.js and Vercel setup, the waitlist endpoint and form logic, metadata, icons, sitemap and the security headers. The redesign replaces the page layer (sections, styles, the visual assets) and adds two small dependencies: Lenis and Motion.
