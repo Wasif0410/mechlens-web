@@ -87,7 +87,30 @@ function createMaterials(lens: { mask: THREE.Texture; tint: THREE.Texture; hud: 
   };
 }
 
-type Materials = ReturnType<typeof createMaterials>;
+type Materials = Record<keyof ReturnType<typeof createMaterials>, THREE.Material>;
+
+/**
+ * Materials for the lens mask: the lens in plain white, every other part invisible but still
+ * hiding what's behind it, so the render shows exactly the part of the lens you can see.
+ */
+function createMaskMaterials(lens: { mask: THREE.Texture }): Materials {
+  const hidden = new THREE.MeshBasicMaterial({ colorWrite: false });
+  const white = new THREE.MeshBasicMaterial({ color: "#ffffff", alphaMap: lens.mask, alphaTest: 0.5, toneMapped: false });
+  return {
+    frame: hidden,
+    shell: hidden,
+    lens: white,
+    hud: hidden,
+    seal: hidden,
+    strap: hidden,
+    glass: hidden,
+    iris: hidden,
+    ring: hidden,
+    hole: hidden,
+    signal: hidden,
+    inlay: hidden,
+  };
+}
 
 /** A soft amber halo texture, for the status light and the button ring. */
 function glowTexture(): THREE.CanvasTexture {
@@ -117,7 +140,9 @@ function OnSurface({ x, y, z, children }: { x: number; y: number; z: number; chi
   );
 }
 
-function Glow({ texture, size }: { texture: THREE.Texture; size: number }) {
+function Glow({ texture, size }: { texture: THREE.Texture | null; size: number }) {
+  // No halo in the lens mask.
+  if (!texture) return null;
   return (
     <Billboard>
       <mesh>
@@ -145,7 +170,7 @@ function Camera({ m }: { m: Materials }) {
   );
 }
 
-function StatusLight({ m, glow }: { m: Materials; glow: THREE.Texture }) {
+function StatusLight({ m, glow }: { m: Materials; glow: THREE.Texture | null }) {
   return (
     <OnSurface x={0.1} y={BROW_Y + 0.01} z={BROW_FRONT}>
       <mesh rotation={[Math.PI / 2, 0, 0]} material={m.signal}>
@@ -176,7 +201,7 @@ function MicrophoneGrille({ x, m }: { x: number; m: Materials }) {
  * A side module, where the strap attaches. The one on the wearer's right (-x) carries the
  * push-to-talk button; the ring faces outward.
  */
-function SidePod({ side, m, glow }: { side: 1 | -1; m: Materials; glow: THREE.Texture }) {
+function SidePod({ side, m, glow }: { side: 1 | -1; m: Materials; glow: THREE.Texture | null }) {
   return (
     <group position={[side * POD.x, POD.y, POD.z]} rotation={[0, side * POD.yaw, 0]}>
       <RoundedBox args={POD.size} radius={0.035} smoothness={5} material={m.shell} />
@@ -217,10 +242,13 @@ export type GogglesModelProps = {
   hudRef?: React.RefObject<number>;
   /** How far apart the parts are, 0 (assembled) to 1 (see EXPLODE). Read every frame. */
   explodeRef?: React.RefObject<number>;
+  /** Render only the visible lens, in white, for the lens mask poster. */
+  mask?: boolean;
 };
 
-export function GogglesModel({ hudRef, explodeRef }: GogglesModelProps) {
+export function GogglesModel({ hudRef, explodeRef, mask = false }: GogglesModelProps) {
   const hudMeshRef = useRef<THREE.Mesh>(null);
+  const hudPlacedRef = useRef(false);
   const partsRef = useRef<PartGroups>({});
   const parts = useMemo(
     () => ({
@@ -233,13 +261,16 @@ export function GogglesModel({ hudRef, explodeRef }: GogglesModelProps) {
     }),
     [],
   );
-  const m = useMemo(() => createMaterials(parts.lens), [parts]);
-  const glow = useMemo(() => glowTexture(), []);
+  const m = useMemo(() => (mask ? createMaskMaterials(parts.lens) : createMaterials(parts.lens)), [parts, mask]);
+  const glowMap = useMemo(() => glowTexture(), []);
+  const glow = mask ? null : glowMap;
 
   useFrame((_, delta) => {
     const material = hudMeshRef.current?.material;
     if (material instanceof THREE.MeshBasicMaterial) {
-      material.opacity = THREE.MathUtils.damp(material.opacity, hudRef?.current ?? 0, 7, delta);
+      const target = hudRef?.current ?? 0;
+      material.opacity = hudPlacedRef.current ? THREE.MathUtils.damp(material.opacity, target, 7, delta) : target;
+      hudPlacedRef.current = true;
     }
     const apart = explodeRef?.current ?? 0;
     for (const part of Object.keys(EXPLODE) as ExplodingPart[]) {
@@ -256,10 +287,10 @@ export function GogglesModel({ hudRef, explodeRef }: GogglesModelProps) {
       parts.lens.mask.dispose();
       parts.lens.tint.dispose();
       parts.lens.hud.dispose();
-      glow.dispose();
+      glowMap.dispose();
       Object.values(m).forEach((material) => material.dispose());
     },
-    [parts, m, glow],
+    [parts, m, glowMap],
   );
 
   return (
@@ -269,8 +300,9 @@ export function GogglesModel({ hudRef, explodeRef }: GogglesModelProps) {
         <mesh geometry={parts.seal} material={m.seal} />
       </Moving>
       <Moving part="lens" partsRef={partsRef}>
-        <mesh geometry={parts.lens.geometry} material={m.lens} />
-        <mesh ref={hudMeshRef} geometry={parts.lens.hudGeometry} material={m.hud} renderOrder={2} />
+        {/* In the mask the lens draws after every other part, so the parts in front of it hide it. */}
+        <mesh geometry={parts.lens.geometry} material={m.lens} renderOrder={mask ? 1 : 0} />
+        <mesh ref={hudMeshRef} geometry={parts.lens.hudGeometry} material={m.hud} renderOrder={2} visible={!mask} />
       </Moving>
       <Moving part="brow" partsRef={partsRef}>
         <mesh geometry={parts.brow} material={m.shell} />

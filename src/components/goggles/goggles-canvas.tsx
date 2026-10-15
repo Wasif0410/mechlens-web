@@ -12,15 +12,18 @@ import { CAMERAS, TARGET, productPose } from "./scene";
 /**
  * A dark studio built from light panels (nothing is downloaded): long strip lights behind and to
  * the sides draw the silhouette, a dim soft box in front keeps the shadows readable, and a warm
- * panel low on the right echoes the amber accents.
+ * panel low on the right echoes the amber accents. Straight on, that warm panel would sit in the
+ * visor as a patch of colour where the hero's headline goes, so the front view leaves it out.
  */
-function Studio() {
+function Studio({ warm }: { warm: boolean }) {
   return (
     <Environment resolution={256} frames={1}>
       <color attach="background" args={["#060708"]} />
       <Lightformer form="rect" intensity={6} position={[0, 2.4, -4]} rotation-x={-Math.PI / 5} scale={[10, 0.5, 1]} />
       <Lightformer form="rect" intensity={3} position={[-5, 0.6, -0.5]} rotation-y={Math.PI / 2} scale={[3.5, 0.35, 1]} />
-      <Lightformer form="rect" intensity={2.2} position={[5, 0.2, 0.5]} rotation-y={-Math.PI / 2} scale={[3, 0.3, 1]} color="#ffd9a0" />
+      {warm && (
+        <Lightformer form="rect" intensity={2.2} position={[5, 0.2, 0.5]} rotation-y={-Math.PI / 2} scale={[3, 0.3, 1]} color="#ffd9a0" />
+      )}
       <Lightformer form="rect" intensity={1.8} position={[0, 3, 4]} rotation-x={Math.PI / 2.6} scale={[6, 2, 1]} />
       {/* Two thin bars in front: the long highlights that run across the visor. */}
       <Lightformer form="rect" intensity={3} position={[-1.2, 1.5, 5]} scale={[9, 0.16, 1]} />
@@ -111,6 +114,8 @@ export type GogglesCanvasProps = {
   onReady?: () => void;
   /** The browser dropped the WebGL context (for example under GPU memory pressure). */
   onContextLost?: () => void;
+  /** Posters only: render the lens mask (see GogglesModel). */
+  mask?: boolean;
 };
 
 export default function GogglesCanvas({
@@ -122,11 +127,12 @@ export default function GogglesCanvas({
   active = true,
   onReady,
   onContextLost,
+  mask = false,
 }: GogglesCanvasProps) {
   const camera = CAMERAS[view];
   const hudRef = useRef(0);
   const explodeRef = useRef(0);
-  const model = <GogglesModel hudRef={hudRef} explodeRef={explodeRef} />;
+  const model = <GogglesModel hudRef={hudRef} explodeRef={explodeRef} mask={mask} />;
 
   let content: React.ReactNode = model;
   if (progressRef) {
@@ -175,10 +181,10 @@ export default function GogglesCanvas({
       }}
     >
       <Suspense fallback={null}>
-        <Studio />
+        {!mask && <Studio warm={view !== "front"} />}
         <ambientLight intensity={0.04} />
         {content}
-        <LightPool />
+        {!mask && <LightPool />}
       </Suspense>
     </Canvas>
   );

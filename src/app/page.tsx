@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 import { Closing } from "@/components/sections/closing";
 import { Evidence } from "@/components/sections/evidence";
 import { Faq } from "@/components/sections/faq";
-import { Hero } from "@/components/sections/hero";
-import { InUse } from "@/components/sections/in-use";
-import { Problem } from "@/components/sections/problem";
+import { LensStory } from "@/components/sections/lens-story";
 import { Product } from "@/components/sections/product";
 import { Shops } from "@/components/sections/shops";
-import { Statement } from "@/components/sections/statement";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { baseOpenGraph } from "@/lib/site";
@@ -28,11 +25,8 @@ export default function Home() {
       </a>
       <SiteHeader />
       <main id="main">
-        <Hero />
-        <Statement />
-        <Problem />
+        <LensStory />
         <Product />
-        <InUse />
         <Evidence />
         <Shops />
         <Faq />

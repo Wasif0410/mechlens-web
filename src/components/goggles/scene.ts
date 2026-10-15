@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { BROW_FRONT, BROW_Y, POD, onWrap } from "./geometry";
-import type { GogglesView, PartName } from "./poster";
+import { beatPosition, type GogglesView, type PartName } from "./poster";
 
 /**
  * Scene settings shared by the live canvas and the pre-rendered posters, so a poster always
@@ -11,7 +11,8 @@ import type { GogglesView, PartName } from "./poster";
  */
 
 export const CAMERAS: Record<GogglesView, { position: [number, number, number]; fov: number }> = {
-  hero: { position: [-1.62, 0.34, 2.95], fov: 26 },
+  // Straight on, at eye level: the hero, where the headline sits inside the lens.
+  front: { position: [0, 0.03, 3.3], fov: 22 },
   product: { position: [0, 0.22, 3.75], fov: 25 },
 };
 
@@ -35,7 +36,7 @@ export const PRODUCT_BEATS = [
 export type ProductPose = { yaw: number; pitch: number; scale: number; hud: number; explode: number };
 
 export function productPose(progress: number): ProductPose {
-  const p = THREE.MathUtils.clamp(progress, 0, 1) * (PRODUCT_BEATS.length - 1);
+  const p = beatPosition(progress, PRODUCT_BEATS.length);
   const i = Math.min(PRODUCT_BEATS.length - 2, Math.floor(p));
   const t = THREE.MathUtils.smootherstep(p - i, 0, 1);
   const a = PRODUCT_BEATS[i];
@@ -71,10 +72,13 @@ function buttonPosition(): [number, number, number] {
 
 /** Model-space positions of the parts the product scene labels, and which part each moves with. */
 export const PART_ANCHORS: Record<PartName, { position: [number, number, number]; movesWith: ExplodingPart }> = {
-  camera: { position: onWrap(0, BROW_Y + 0.05, BROW_FRONT + 0.02).position, movesWith: "brow" },
-  // Above the grille on the wearer's right; there's a matching one on the left.
-  microphone: { position: onWrap(-0.38, BROW_Y + 0.05, BROW_FRONT + 0.02).position, movesWith: "brow" },
+  // Just above the brow bar, so the labels never sit on the bar itself.
+  camera: { position: onWrap(0, BROW_Y + 0.1, BROW_FRONT + 0.02).position, movesWith: "brow" },
+  // Above the grille on the wearer's left (the far end of the bar when the goggles come apart);
+  // there's a matching one on the right.
+  microphone: { position: onWrap(0.38, BROW_Y + 0.1, BROW_FRONT + 0.02).position, movesWith: "brow" },
   button: { position: buttonPosition(), movesWith: "podRight" },
-  // The left edge (as seen from the front) of the outline the heads-up overlay draws on the lens.
-  lens: { position: onWrap(-0.47, 0.07, 0.09).position, movesWith: "lens" },
+  // The right end (as seen from the front) of the outline and answer lines the heads-up overlay
+  // draws on the lens, so the label runs over clear lens, away from the button on the other side.
+  lens: { position: onWrap(-0.165, 0.07, 0.09).position, movesWith: "lens" },
 };

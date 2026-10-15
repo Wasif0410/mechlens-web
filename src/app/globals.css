@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Screens big enough for a pinned scroll scene (keep in step with src/lib/use-pinning.ts). */
-@custom-variant pin (@media (min-width: 48rem) and (min-height: 40rem));
+/* Wide but short screens, such as a phone on its side: layouts that stack go side by side. */
+@custom-variant short (@media (min-width: 40rem) and (max-height: 35rem));
+
 
 /*
  * MechLens design tokens: "the view from under the hood".
@@ -25,8 +26,9 @@
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --animate-slow-zoom: slow-zoom 16s var(--ease-out-soft) infinite alternate;
   --animate-rise-in: rise-in 1s var(--ease-out-soft) both;
+  --animate-visor-sweep: visor-sweep 9s var(--ease-out-soft) 1.8s infinite;
+  --animate-bracket-in: bracket-in 0.9s var(--ease-out-soft) 0.35s both;
 
   /* Hero entrance: lines rise 24px and sharpen from a blur. Pure CSS, so it runs without JS. */
   @keyframes rise-in {
@@ -37,14 +39,25 @@
     }
   }
 
-  @keyframes slow-zoom {
-    from {
-      transform: scale(1);
+  /* A highlight crossing the visor, then a long pause. */
+  @keyframes visor-sweep {
+    0% {
+      transform: translateX(0);
     }
-    to {
-      transform: scale(1.06);
+    45%,
+    100% {
+      transform: translateX(400%);
     }
   }
+
+  /* The heads-up corners closing in around the headline. */
+  @keyframes bracket-in {
+    from {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+
 }
 
 @layer base {
