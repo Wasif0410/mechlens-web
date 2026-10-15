@@ -20,6 +20,7 @@ Open http://localhost:3000.
 | `npm start` | Serve the production build |
 | `npm run lint` | ESLint (Next.js core web vitals and TypeScript rules) |
 | `npm run typecheck` | Generates Next.js route types, then runs TypeScript with no output |
+| `npm run smoke` | Start the production build and check the pages, generated files and waitlist endpoint (run `npm run build` first) |
 | `npm run posters` | Re-render the goggles poster images from the 3D scene (see below) |
 
 ## Deploy on Vercel
@@ -28,6 +29,10 @@ Import the repository in Vercel and deploy; the framework preset is detected. No
 
 - **Site URL.** Canonical links, the sitemap and the share image use the production domain Vercel provides (`VERCEL_PROJECT_PRODUCTION_URL`); preview deployments use their own URL. To use another domain, set `NEXT_PUBLIC_SITE_URL` (for example `https://mechlens.com`). Builds outside Vercel without it fall back to `http://localhost:3000`.
 - **Static by default.** The page, sitemap, robots file, icon and share image are prerendered at build time. Only `POST /api/waitlist` runs on demand.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`, on Node 22 and 24: install with `npm ci`, then lint, typecheck, build and the smoke test. The actions it uses are pinned to commits, with the release named beside each; update them together when a new release is worth taking. To make the checks required before merging, add them under the repository's branch protection rules on GitHub (Settings, Branches).
 
 ## Before launch
 
