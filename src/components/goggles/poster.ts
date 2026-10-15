@@ -11,4 +11,4 @@ export const POSTER_SIZE: Record<GogglesView, { width: number; height: number }>
   product: { width: 1200, height: 900 },
 };
 
-export type PartName = "camera" | "button" | "lens";
+export type PartName = "camera" | "microphone" | "button" | "lens";

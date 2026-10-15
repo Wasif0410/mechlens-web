@@ -57,14 +57,20 @@ function LightPool() {
   );
 }
 
-/** Turns the goggles to follow the scroll position of the product scene. */
+/**
+ * Turns the goggles, and takes them apart, to follow the scroll position of the product scene.
+ * Runs before every other frame callback (priority -1), so the model and the labels read this
+ * frame's pose.
+ */
 function ScrollPose({
   progressRef,
   hudRef,
+  explodeRef,
   children,
 }: {
   progressRef: React.RefObject<number>;
   hudRef: React.RefObject<number>;
+  explodeRef: React.RefObject<number>;
   children: React.ReactNode;
 }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -76,12 +82,17 @@ function ScrollPose({
     if (!group) return;
     if (!placedRef.current) {
       // Start in the pose the poster shows, so the swap to the live model doesn't jump.
-      group.rotation.y = pose.yaw;
+      group.rotation.set(pose.pitch, pose.yaw, 0);
+      group.scale.setScalar(pose.scale);
+      explodeRef.current = pose.explode;
       placedRef.current = true;
       return;
     }
+    group.rotation.x = THREE.MathUtils.damp(group.rotation.x, pose.pitch, 5, delta);
     group.rotation.y = THREE.MathUtils.damp(group.rotation.y, pose.yaw, 5, delta);
-  });
+    group.scale.setScalar(THREE.MathUtils.damp(group.scale.x, pose.scale, 5, delta));
+    explodeRef.current = THREE.MathUtils.damp(explodeRef.current, pose.explode, 5, delta);
+  }, -1);
   return <group ref={groupRef}>{children}</group>;
 }
 
@@ -114,14 +125,15 @@ export default function GogglesCanvas({
 }: GogglesCanvasProps) {
   const camera = CAMERAS[view];
   const hudRef = useRef(0);
-  const model = <GogglesModel hudRef={hudRef} />;
+  const explodeRef = useRef(0);
+  const model = <GogglesModel hudRef={hudRef} explodeRef={explodeRef} />;
 
   let content: React.ReactNode = model;
   if (progressRef) {
     content = (
-      <ScrollPose progressRef={progressRef} hudRef={hudRef}>
+      <ScrollPose progressRef={progressRef} hudRef={hudRef} explodeRef={explodeRef}>
         {model}
-        {labelsRef && <AnchorProjector labelsRef={labelsRef} />}
+        {labelsRef && <AnchorProjector labelsRef={labelsRef} explodeRef={explodeRef} />}
       </ScrollPose>
     );
   } else if (interactive) {

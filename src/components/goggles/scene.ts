@@ -19,24 +19,46 @@ export const CAMERAS: Record<GogglesView, { position: [number, number, number]; 
 export const TARGET: [number, number, number] = [0, 0.02, -0.24];
 
 /**
- * The product scene: as the visitor scrolls (progress 0 to 1) the goggles turn to show each part.
- * Each beat is the model's rotation about the vertical axis (positive turns the wearer's right
- * side towards the camera) and how bright the heads-up overlay on the lens is.
+ * The product scene: as the visitor scrolls (progress 0 to 1) the goggles turn to show each part,
+ * then come apart. Each beat is the model's rotation about the vertical axis (positive turns the
+ * wearer's right side towards the camera), its tilt towards the camera (positive shows more of
+ * the top), its scale (smaller when apart, so every part fits), how bright the heads-up overlay
+ * on the lens is, and how far apart the parts are.
  */
 export const PRODUCT_BEATS = [
-  { yaw: 0.32, hud: 0 }, // camera at the brow
-  { yaw: 0.98, hud: 0 }, // push-to-talk button on the wearer's right
-  { yaw: 0.22, hud: 1 }, // the answer on the lens
+  { yaw: 0.32, pitch: 0, scale: 1, hud: 0, explode: 0 }, // camera at the brow
+  { yaw: 0.98, pitch: 0, scale: 1, hud: 0, explode: 0 }, // push-to-talk button on the wearer's right
+  { yaw: 0.22, pitch: 0, scale: 1, hud: 1, explode: 0 }, // the answer on the lens
+  { yaw: 0.78, pitch: 0.18, scale: 0.8, hud: 1, explode: 1 }, // taken apart, every part in view
 ] as const;
 
-export function productPose(progress: number): { yaw: number; hud: number } {
+export type ProductPose = { yaw: number; pitch: number; scale: number; hud: number; explode: number };
+
+export function productPose(progress: number): ProductPose {
   const p = THREE.MathUtils.clamp(progress, 0, 1) * (PRODUCT_BEATS.length - 1);
   const i = Math.min(PRODUCT_BEATS.length - 2, Math.floor(p));
   const t = THREE.MathUtils.smootherstep(p - i, 0, 1);
   const a = PRODUCT_BEATS[i];
   const b = PRODUCT_BEATS[i + 1];
-  return { yaw: THREE.MathUtils.lerp(a.yaw, b.yaw, t), hud: THREE.MathUtils.lerp(a.hud, b.hud, t) };
+  const lerp = (key: keyof ProductPose) => THREE.MathUtils.lerp(a[key], b[key], t);
+  return { yaw: lerp("yaw"), pitch: lerp("pitch"), scale: lerp("scale"), hud: lerp("hud"), explode: lerp("explode") };
 }
+
+/**
+ * Where each part moves when the goggles come apart, in model units at explode = 1: the lens
+ * forward, the brow bar (camera, microphones, status light) up, the face seal and strap back, and
+ * the side modules outward. The frame stays put.
+ */
+export const EXPLODE = {
+  lens: [0, 0, 0.36],
+  brow: [0, 0.3, 0.04],
+  seal: [0, -0.02, -0.3],
+  strap: [0, 0, -0.18],
+  podLeft: [0.26, 0, -0.02],
+  podRight: [-0.26, 0, -0.02],
+} as const satisfies Record<string, readonly [number, number, number]>;
+
+export type ExplodingPart = keyof typeof EXPLODE;
 
 /** Centre of the push-to-talk button, on the outer face of the wearer's right pod. */
 export const BUTTON_LOCAL: [number, number, number] = [-(POD.size[0] / 2 + 0.002), 0.015, 0.03];
@@ -47,10 +69,12 @@ function buttonPosition(): [number, number, number] {
   return [-POD.x + local.x, POD.y + local.y, POD.z + local.z];
 }
 
-/** Model-space positions of the parts the product scene labels. */
-export const PART_ANCHORS: Record<PartName, [number, number, number]> = {
-  camera: onWrap(0, BROW_Y + 0.05, BROW_FRONT + 0.02).position,
-  button: buttonPosition(),
+/** Model-space positions of the parts the product scene labels, and which part each moves with. */
+export const PART_ANCHORS: Record<PartName, { position: [number, number, number]; movesWith: ExplodingPart }> = {
+  camera: { position: onWrap(0, BROW_Y + 0.05, BROW_FRONT + 0.02).position, movesWith: "brow" },
+  // Above the grille on the wearer's right; there's a matching one on the left.
+  microphone: { position: onWrap(-0.38, BROW_Y + 0.05, BROW_FRONT + 0.02).position, movesWith: "brow" },
+  button: { position: buttonPosition(), movesWith: "podRight" },
   // The left edge (as seen from the front) of the outline the heads-up overlay draws on the lens.
-  lens: onWrap(-0.47, 0.07, 0.09).position,
+  lens: { position: onWrap(-0.47, 0.07, 0.09).position, movesWith: "lens" },
 };

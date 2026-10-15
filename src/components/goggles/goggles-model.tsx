@@ -17,7 +17,7 @@ import {
   sealGeometry,
   strapGeometry,
 } from "./geometry";
-import { BUTTON_LOCAL } from "./scene";
+import { BUTTON_LOCAL, EXPLODE, type ExplodingPart } from "./scene";
 
 const SIGNAL = brand.signal;
 
@@ -197,13 +197,31 @@ function SidePod({ side, m, glow }: { side: 1 | -1; m: Materials; glow: THREE.Te
   );
 }
 
+type PartGroups = Partial<Record<ExplodingPart, THREE.Group | null>>;
+
+/** A part that moves as one when the goggles come apart; GogglesModel positions it every frame. */
+function Moving({ part, partsRef, children }: { part: ExplodingPart; partsRef: React.RefObject<PartGroups>; children: React.ReactNode }) {
+  return (
+    <group
+      ref={(group) => {
+        partsRef.current[part] = group;
+      }}
+    >
+      {children}
+    </group>
+  );
+}
+
 export type GogglesModelProps = {
   /** Brightness of the heads-up overlay on the lens, 0 to 1. Read every frame. */
   hudRef?: React.RefObject<number>;
+  /** How far apart the parts are, 0 (assembled) to 1 (see EXPLODE). Read every frame. */
+  explodeRef?: React.RefObject<number>;
 };
 
-export function GogglesModel({ hudRef }: GogglesModelProps) {
+export function GogglesModel({ hudRef, explodeRef }: GogglesModelProps) {
   const hudMeshRef = useRef<THREE.Mesh>(null);
+  const partsRef = useRef<PartGroups>({});
   const parts = useMemo(
     () => ({
       frame: frameGeometry(),
@@ -220,8 +238,14 @@ export function GogglesModel({ hudRef }: GogglesModelProps) {
 
   useFrame((_, delta) => {
     const material = hudMeshRef.current?.material;
-    if (!(material instanceof THREE.MeshBasicMaterial)) return;
-    material.opacity = THREE.MathUtils.damp(material.opacity, hudRef?.current ?? 0, 7, delta);
+    if (material instanceof THREE.MeshBasicMaterial) {
+      material.opacity = THREE.MathUtils.damp(material.opacity, hudRef?.current ?? 0, 7, delta);
+    }
+    const apart = explodeRef?.current ?? 0;
+    for (const part of Object.keys(EXPLODE) as ExplodingPart[]) {
+      const [x, y, z] = EXPLODE[part];
+      partsRef.current[part]?.position.set(x * apart, y * apart, z * apart);
+    }
   });
 
   useEffect(
@@ -241,18 +265,30 @@ export function GogglesModel({ hudRef }: GogglesModelProps) {
   return (
     <group>
       <mesh geometry={parts.frame} material={m.frame} />
-      <mesh geometry={parts.seal} material={m.seal} />
-      <mesh geometry={parts.lens.geometry} material={m.lens} />
-      <mesh ref={hudMeshRef} geometry={parts.lens.hudGeometry} material={m.hud} renderOrder={2} />
-      <mesh geometry={parts.brow} material={m.shell} />
-      <mesh geometry={parts.accent} material={m.inlay} />
-      <mesh geometry={parts.strap} material={m.strap} />
-      <Camera m={m} />
-      <StatusLight m={m} glow={glow} />
-      <MicrophoneGrille x={-0.38} m={m} />
-      <MicrophoneGrille x={0.38} m={m} />
-      <SidePod side={1} m={m} glow={glow} />
-      <SidePod side={-1} m={m} glow={glow} />
+      <Moving part="seal" partsRef={partsRef}>
+        <mesh geometry={parts.seal} material={m.seal} />
+      </Moving>
+      <Moving part="lens" partsRef={partsRef}>
+        <mesh geometry={parts.lens.geometry} material={m.lens} />
+        <mesh ref={hudMeshRef} geometry={parts.lens.hudGeometry} material={m.hud} renderOrder={2} />
+      </Moving>
+      <Moving part="brow" partsRef={partsRef}>
+        <mesh geometry={parts.brow} material={m.shell} />
+        <mesh geometry={parts.accent} material={m.inlay} />
+        <Camera m={m} />
+        <StatusLight m={m} glow={glow} />
+        <MicrophoneGrille x={-0.38} m={m} />
+        <MicrophoneGrille x={0.38} m={m} />
+      </Moving>
+      <Moving part="strap" partsRef={partsRef}>
+        <mesh geometry={parts.strap} material={m.strap} />
+      </Moving>
+      <Moving part="podLeft" partsRef={partsRef}>
+        <SidePod side={1} m={m} glow={glow} />
+      </Moving>
+      <Moving part="podRight" partsRef={partsRef}>
+        <SidePod side={-1} m={m} glow={glow} />
+      </Moving>
     </group>
   );
 }
