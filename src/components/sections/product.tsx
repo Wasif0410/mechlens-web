@@ -8,7 +8,7 @@ import product2 from "@/assets/goggles-product-2.png";
 import product3 from "@/assets/goggles-product-3.png";
 import product4 from "@/assets/goggles-product-4.png";
 import { GogglesViewer, useWebGL } from "@/components/goggles/goggles-viewer";
-import { type PartName, POSTER_SIZE } from "@/components/goggles/poster";
+import { beatPosition, type PartName, POSTER_SIZE } from "@/components/goggles/poster";
 import { Reveal } from "@/components/reveal";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
@@ -36,7 +36,7 @@ const beats: Array<{
     key: "camera",
     labels: { camera: "right" },
     title: "A camera at your brow.",
-    body: "It sits where your eyes are and sees the part you’re looking at. Nothing to point, nothing to photograph.",
+    body: "It sits where your eyes are, designed to see the part you’re looking at. Nothing to point, nothing to photograph.",
     poster: product1,
     alt: "The goggles from the front left, with the camera at the center of the brow.",
   },
@@ -44,13 +44,13 @@ const beats: Array<{
     key: "button",
     labels: { button: "left" },
     title: "Your voice, one button.",
-    body: "Press the button on your right temple and ask in plain words. Your hands stay on the car.",
+    body: "Press the button on your right temple and ask in plain words, so your hands can stay on the car.",
     poster: product2,
     alt: "The goggles turned to show the amber-ringed push-to-talk button on the wearer’s right.",
   },
   {
     key: "lens",
-    labels: { lens: "left" },
+    labels: { lens: "right" },
     title: "The answer, where you’re looking.",
     body: "MechLens is designed to outline the part on the lens and answer for the exact vehicle, with the source it came from.",
     poster: product3,
@@ -58,9 +58,9 @@ const beats: Array<{
   },
   {
     key: "apart",
-    labels: { camera: "right", microphone: "left", button: "left", lens: "left" },
-    title: "Built as one piece.",
-    body: "The camera, microphones, push-to-talk button and heads-up display are all part of the frame, so there’s nothing to clip on before you get under the car.",
+    labels: { camera: "left", microphone: "right", button: "left", lens: "right" },
+    title: "Nothing to clip on.",
+    body: "The camera, microphones, push-to-talk button and heads-up display are designed into the frame itself.",
     poster: product4,
     alt: "The goggles taken apart in layers: the brow bar with the camera lifted above, the lens in front showing the heads-up outline, the frame and face seal behind it, and the side module with the push-to-talk button off to one side.",
   },
@@ -119,7 +119,7 @@ function Pinned() {
   const [active, setActive] = useState(0);
   useMotionValueEvent(scrollYProgress, "change", (value) => {
     progressRef.current = value;
-    setActive(Math.min(beats.length - 1, Math.max(0, Math.round(value * (beats.length - 1)))));
+    setActive(Math.round(beatPosition(value, beats.length)));
   });
 
   return (
@@ -169,6 +169,7 @@ function Pinned() {
               ))}
             </>
           )}
+          <p className="pointer-events-none absolute right-0 -bottom-8 text-xs text-ash/80">Concept design</p>
         </div>
 
         <div className="relative mx-auto flex h-full max-w-[1320px] items-end px-8 pb-[15vh]">
@@ -227,6 +228,7 @@ function Stacked({ always }: { always: boolean }) {
           </div>
         </div>
       ))}
+      <p className="text-xs text-ash/80">Concept design</p>
     </div>
   );
 }
