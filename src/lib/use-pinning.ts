@@ -1,10 +1,10 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Screens big enough for a pinned scroll scene: at least tablet width and 640px tall. Keep in step
- * with the `pin` variant in src/app/globals.css, which applies the pinned layout in CSS.
+ * Screens with room for a held, two-column scroll scene: at least 1024px wide and 736px tall,
+ * which is what the network scene's heading, introduction and four steps need.
  */
-const QUERY = "(min-width: 48rem) and (min-height: 40rem)";
+const QUERY = "(min-width: 64rem) and (min-height: 46rem)";
 
 function subscribe(onChange: () => void) {
   const media = window.matchMedia(QUERY);
@@ -13,10 +13,10 @@ function subscribe(onChange: () => void) {
 }
 
 /**
- * Whether the screen gets pinned scroll scenes. Hydration-safe like usePrefersReducedMotion: the
- * server and the first client render assume a pinning screen, then React re-renders with the real
- * answer.
+ * Whether the screen gets held (pinned) scroll scenes. Hydration-safe: the server and the first
+ * client render assume it doesn't, so sections render their stacked layout first; the sections
+ * that use this sit well below the first screen, so switching layouts never moves what's in view.
  */
 export function usePinning(): boolean {
-  return useSyncExternalStore(subscribe, () => window.matchMedia(QUERY).matches, () => true);
+  return useSyncExternalStore(subscribe, () => window.matchMedia(QUERY).matches, () => false);
 }

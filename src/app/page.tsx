@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Closing } from "@/components/sections/closing";
-import { Evidence } from "@/components/sections/evidence";
 import { Faq } from "@/components/sections/faq";
 import { LensStory } from "@/components/sections/lens-story";
+import { Network } from "@/components/sections/network";
 import { Product } from "@/components/sections/product";
 import { Shops } from "@/components/sections/shops";
 import { SiteFooter } from "@/components/site-footer";
@@ -27,7 +27,7 @@ export default function Home() {
       <main id="main">
         <LensStory />
         <Product />
-        <Evidence />
+        <Network />
         <Shops />
         <Faq />
         <Closing />
