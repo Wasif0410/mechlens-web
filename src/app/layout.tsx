@@ -1,15 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
+import { Geist_Mono, Instrument_Sans } from "next/font/google";
+import { Providers } from "@/components/providers";
 import { brand } from "@/lib/brand";
 import { baseOpenGraph, site } from "@/lib/site";
 import "./globals.css";
 
-const archivo = localFont({
-  src: "./fonts/archivo-latin-wdth-normal.woff2",
-  weight: "100 900",
-  variable: "--font-archivo",
+const instrument = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-instrument",
   display: "swap",
-  declarations: [{ prop: "font-stretch", value: "62% 125%" }],
+});
+
+/** Only for the heads-up overlay readouts. */
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-geist-mono",
+  display: "swap",
+  // Used only well below the fold, so it shouldn't compete with the first paint.
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -26,13 +35,20 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: brand.studio,
+  themeColor: brand.night,
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={archivo.variable}>
-      <body className="min-h-dvh bg-studio text-ink">{children}</body>
+    <html lang="en" className={`${instrument.variable} ${geistMono.variable}`}>
+      <body className="min-h-dvh bg-night text-bone">
+        {/* Without JavaScript, headlines that would settle into place and words that would light up as you scroll are simply shown, and the held opening scene doesn't hold. */}
+        <noscript>
+          <style>{"[data-reveal]{opacity:1!important;transform:none!important}[data-lit] *{opacity:1!important}[data-story]{height:auto!important}[data-story-anchor]{display:none}"}</style>
+        </noscript>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

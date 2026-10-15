@@ -1,58 +1,89 @@
 @import "tailwindcss";
 
+/* Wide but short screens, such as a phone on its side: layouts that stack go side by side. */
+@custom-variant short (@media (min-width: 40rem) and (max-height: 35rem));
+
+
 /*
- * MechLens design tokens.
+ * MechLens design tokens: "the view from under the hood".
  *
- * A light studio palette for the product, graphite for the trust section, and one accent:
- * workshop yellow, kept for the things you act on (buttons, the push-to-talk ring, the status
- * light). Yellow is never used for text on a light surface.
+ * A warm near-black page, off-white headlines and quiet grey body text. Amber (signal) is kept
+ * for the heads-up overlay and the main button only: amber means "what MechLens shows you".
  */
 @theme {
-  --color-studio: #eef0f2;
-  --color-surface: #ffffff;
-  --color-ink: #121519;
-  --color-ink-muted: #4b5560;
-  --color-line: #d9dee3;
-  --color-graphite: #16191d;
-  --color-graphite-raised: #1f2329;
-  --color-on-graphite: #eceff2;
-  --color-on-graphite-muted: #a1abb5;
-  --color-graphite-line: rgb(255 255 255 / 0.12);
+  --color-night: #0a0b0c;
+  --color-steel: #16181b;
+  --color-bone: #ece9e2;
+  --color-ash: #9a9fa4;
+  --color-hairline: rgb(255 255 255 / 0.1);
+  --color-field: rgb(255 255 255 / 0.4);
   --color-signal: #f2b705;
   --color-signal-hover: #ffc929;
+  --color-alert: #ff8a7a;
 
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --animate-rise: rise 0.8s var(--ease-out-soft) both;
+  --animate-rise-in: rise-in 1s var(--ease-out-soft) both;
+  --animate-visor-sweep: visor-sweep 9s var(--ease-out-soft) 1.8s infinite;
+  --animate-bracket-in: bracket-in 0.9s var(--ease-out-soft) 0.35s both;
 
-  @keyframes rise {
+  /* Hero entrance: lines rise 24px and sharpen from a blur. Pure CSS, so it runs without JS. */
+  @keyframes rise-in {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(24px);
+      filter: blur(8px);
     }
   }
+
+  /* A highlight crossing the visor, then a long pause. */
+  @keyframes visor-sweep {
+    0% {
+      transform: translateX(0);
+    }
+    45%,
+    100% {
+      transform: translateX(400%);
+    }
+  }
+
+  /* The heads-up corners closing in around the headline. */
+  @keyframes bracket-in {
+    from {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+
 }
 
 @layer base {
   html {
-    background: var(--color-studio);
-    color: var(--color-ink);
+    color-scheme: dark;
+    background: var(--color-night);
+    color: var(--color-bone);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    html {
-      scroll-behavior: smooth;
-    }
-  }
-
   body {
     font-family: var(--font-sans);
     overflow-x: clip;
+  }
+
+  /* A faint film grain over the whole page. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E");
   }
 
   h1,
@@ -67,36 +98,87 @@
 
   ::selection {
     background: var(--color-signal);
-    color: var(--color-ink);
+    color: var(--color-night);
   }
 
   :focus-visible {
-    outline: 2px solid currentColor;
+    outline: 2px solid var(--color-bone);
     outline-offset: 3px;
   }
 
   [id] {
-    scroll-margin-top: 5rem;
+    scroll-margin-top: 4rem;
   }
 }
 
 @layer components {
   .button-primary {
-    @apply inline-flex h-12 items-center justify-center rounded-full bg-signal px-6 text-[15px] font-semibold text-ink transition-colors duration-200 hover:bg-signal-hover;
+    @apply inline-flex h-12 items-center justify-center rounded-full bg-signal px-6 text-[15px] font-semibold text-night transition-colors duration-200 hover:bg-signal-hover;
   }
 
-  /* A native select with its own arrow, drawn in ink. */
+  .link-quiet {
+    @apply text-[15px] text-bone underline decoration-white/30 underline-offset-[6px] transition-colors duration-200 hover:decoration-bone;
+  }
+
+  /* A native select with its own arrow, drawn in bone. */
   .select-arrow {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 fill=%27none%27%3E%3Cpath d=%27M1 1.5l5 5 5-5%27 stroke=%27%23121519%27 stroke-width=%271.6%27/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 fill=%27none%27%3E%3Cpath d=%27M1 1.5l5 5 5-5%27 stroke=%27%23ece9e2%27 stroke-width=%271.6%27/%3E%3C/svg%3E");
     background-position: right 1.25rem center;
     background-repeat: no-repeat;
     background-size: 12px 8px;
   }
 
-  .button-secondary {
-    @apply inline-flex h-12 items-center justify-center rounded-full border border-ink/15 bg-surface/60 px-6 text-[15px] font-semibold text-ink transition-colors duration-200 hover:border-ink/40;
+  .display-xl {
+    @apply text-[clamp(3rem,7.2vw,6.75rem)] leading-[0.96] font-normal tracking-[-0.042em];
   }
+
+  .display-lg {
+    @apply text-[clamp(2.25rem,4.8vw,4.25rem)] leading-[1] font-normal tracking-[-0.036em];
+  }
+
+  .lead {
+    @apply text-[17px] leading-[1.6] text-ash sm:text-lg;
+  }
+}
+
+/* Fills a progress bar from the left (the heads-up timeline). */
+@keyframes fill-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* A ring that grows and fades (a question answered on the service floor). */
+@keyframes ping-ring {
+  from {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Dashes flowing along a line, towards its start (from the technician to the source and back). */
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Lenis smooth scrolling. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
 }
 
 /* Opening an FAQ answer eases its height where the browser supports it. */
@@ -109,8 +191,8 @@
     height: 0;
     overflow: clip;
     transition:
-      height 0.3s var(--ease-out-soft),
-      content-visibility 0.3s allow-discrete;
+      height 0.35s var(--ease-out-soft),
+      content-visibility 0.35s allow-discrete;
   }
 
   .faq-item[open]::details-content {
@@ -124,6 +206,7 @@
   *::after {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
 }

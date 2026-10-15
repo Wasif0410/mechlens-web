@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Image, { type StaticImageData } from "next/image";
 import { Component, type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { GogglesView } from "./scene";
+import type { GogglesCanvasProps } from "./goggles-canvas";
 
 const GogglesCanvas = dynamic(() => import("./goggles-canvas"), { ssr: false });
 
@@ -26,6 +26,10 @@ function supportsWebGL(): boolean {
 
 const noSubscription = () => () => {};
 
+export function useWebGL(): boolean {
+  return useSyncExternalStore(noSubscription, supportsWebGL, () => false);
+}
+
 /** Renders nothing if the 3D view throws, so the poster underneath stays in place. */
 class FallbackToPoster extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -44,32 +48,27 @@ class FallbackToPoster extends Component<{ onError: () => void; children: ReactN
 }
 
 /**
- * Shows the pre-rendered poster straight away, then swaps in the live, draggable model once the
- * page is idle, the viewer is on screen and the model is drawn. If WebGL is missing or fails, the
- * poster stays.
+ * Shows the pre-rendered poster straight away, then swaps in the live model once the page is
+ * idle, the viewer is on screen and the model is drawn. If WebGL is missing or fails, the poster
+ * stays. Fills its positioned parent. Without a `poster`, the parent supplies its own stills.
  */
 export function GogglesViewer({
-  view,
   poster,
   alt,
   sizes,
-  aspectRatio,
-  maxWidth,
-  caption,
   preload = false,
+  canvas,
+  onShowingChange,
 }: {
-  view: GogglesView;
-  poster: StaticImageData;
+  poster?: StaticImageData;
   alt: string;
   sizes: string;
-  aspectRatio: string;
-  maxWidth: number;
-  /** Shown under the model. "Drag to turn it." is added once the live model is showing. */
-  caption: string;
   preload?: boolean;
+  canvas: Omit<GogglesCanvasProps, "active" | "onReady" | "onContextLost">;
+  onShowingChange?: (showing: boolean) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const webgl = useSyncExternalStore(noSubscription, supportsWebGL, () => false);
+  const webgl = useWebGL();
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [ready, setReady] = useState(false);
@@ -105,37 +104,37 @@ export function GogglesViewer({
   const live = webgl && mounted && !failed;
   const showing = live && ready;
 
+  useEffect(() => {
+    onShowingChange?.(showing);
+  }, [showing, onShowingChange]);
+
   return (
-    <>
-      <div ref={ref} style={{ aspectRatio, maxWidth }} className="relative mx-auto w-full">
+    <div ref={ref} className="absolute inset-0">
+      {poster && (
         <Image
           src={poster}
           alt={alt}
           preload={preload}
           sizes={sizes}
-          className={`size-full object-contain transition-opacity duration-700 ${showing ? "opacity-0" : "opacity-100"}`}
+          fill
+          className={`object-contain transition-opacity duration-700 ${showing ? "opacity-0" : "opacity-100"}`}
         />
-        {live && (
-          <div
-            className={`absolute inset-0 transition-opacity duration-700 ${showing ? "opacity-100" : "opacity-0"}`}
-            aria-hidden="true"
-          >
-            <FallbackToPoster onError={() => setFailed(true)}>
-              <GogglesCanvas
-                view={view}
-                interactive
-                active={visible}
-                onReady={() => setReady(true)}
-                onContextLost={() => setFailed(true)}
-              />
-            </FallbackToPoster>
-          </div>
-        )}
-      </div>
-      <p className="mt-2 text-center text-sm text-ink-muted">
-        {caption}
-        {showing ? " Drag to turn it." : ""}
-      </p>
-    </>
+      )}
+      {live && (
+        <div
+          className={`absolute inset-0 transition-opacity duration-700 ${showing ? "opacity-100" : "opacity-0"}`}
+          aria-hidden="true"
+        >
+          <FallbackToPoster onError={() => setFailed(true)}>
+            <GogglesCanvas
+              {...canvas}
+              active={visible}
+              onReady={() => setReady(true)}
+              onContextLost={() => setFailed(true)}
+            />
+          </FallbackToPoster>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { Anatomy } from "@/components/sections/anatomy";
-import { Audiences } from "@/components/sections/audiences";
+import { Closing } from "@/components/sections/closing";
 import { Faq } from "@/components/sections/faq";
-import { Hero } from "@/components/sections/hero";
-import { HowItWorks } from "@/components/sections/how-it-works";
-import { Trust } from "@/components/sections/trust";
-import { WaitlistSection } from "@/components/sections/waitlist-section";
+import { LensStory } from "@/components/sections/lens-story";
+import { Network } from "@/components/sections/network";
+import { Product } from "@/components/sections/product";
+import { Shops } from "@/components/sections/shops";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { baseOpenGraph } from "@/lib/site";
@@ -20,19 +19,18 @@ export default function Home() {
     <>
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-studio"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-bone focus:px-4 focus:py-2 focus:text-night"
       >
         Skip to content
       </a>
       <SiteHeader />
       <main id="main">
-        <Hero />
-        <Anatomy />
-        <HowItWorks />
-        <Trust />
-        <Audiences />
+        <LensStory />
+        <Product />
+        <Network />
+        <Shops />
         <Faq />
-        <WaitlistSection />
+        <Closing />
       </main>
       <SiteFooter />
     </>

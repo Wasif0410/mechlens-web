@@ -42,9 +42,9 @@ export const baseOpenGraph = {
 } as const;
 
 export const navigation = [
-  { href: "#product", label: "Product" },
   { href: "#how-it-works", label: "How it works" },
-  { href: "#trust", label: "Trusted answers" },
+  { href: "#product", label: "Product" },
+  { href: "#trust", label: "Verified answers" },
   { href: "#shops", label: "For shops" },
   { href: "#faq", label: "FAQ" },
 ] as const;
